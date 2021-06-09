@@ -1,0 +1,15 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  TRAW\HreflangPages\:
+    resource: '../Classes/*'
+
+  TRAW\HreflangPages\Seo\Hreflang\HreflangPagesGenerator:
+    tags:
+      - name: event.listener
+        identifier: 'traw-hreflangpages/hreflangpagesGenerator'
+        after: 'typo3-seo/hreflangGenerator'
+        event: TYPO3\CMS\Frontend\Event\ModifyHrefLangTagsEvent

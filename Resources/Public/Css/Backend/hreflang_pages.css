@@ -1,0 +1,18 @@
+.tx-hreflang-list .headline {
+    font-size:14px;
+}
+
+.tx-hreflang-list table {
+    width: 100%;
+}
+
+.tx-hreflang-list ul.hreflangs li {
+    word-break: break-all;
+}
+
+.tx-hreflang-list ul.warnings li.warning {
+    color: darkred;
+}
+.tx-hreflang-list ul.warnings li.info {
+    color: darkblue;
+}

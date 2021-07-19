@@ -28,7 +28,8 @@ class PageUtility
         $targetSiteLanguage = $site->getLanguageById($languageId);
         $languageAspect = LanguageAspectFactory::createFromSiteLanguage($targetSiteLanguage);
 
-        $context = GeneralUtility::makeInstance(Context::class);
+        /** @var Context $context */
+        $context = clone GeneralUtility::makeInstance(Context::class);
         $context->setAspect('language', $languageAspect);
 
         $pageRepository = GeneralUtility::makeInstance(PageRepository::class, $context);

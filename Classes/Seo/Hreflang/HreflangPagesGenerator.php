@@ -88,24 +88,6 @@ class HreflangPagesGenerator extends HrefLangGenerator
     }
 
     /**
-     * @param int $pageId
-     * @param int $languageId
-     * @param ServerRequestInterface|null $request
-     * @return array
-     */
-    protected function getTranslatedPageRecord(int $pageId, int $languageId, ServerRequestInterface $request = null): array
-    {
-        if (!empty($request)) {
-            $site = $request->getAttribute('site');
-            if (!$site instanceof SiteInterface) {
-                return $this->getTypoScriptFrontendController()->page;
-            }
-        }
-
-        return PageUtility::getPageTranslationRecord($pageId, $languageId, $site ?? null);
-    }
-
-    /**
      * @param $pageUid
      * @return array
      * @throws NoSuchCacheGroupException|NoSuchCacheException
@@ -119,7 +101,7 @@ class HreflangPagesGenerator extends HrefLangGenerator
             $site = GeneralUtility::makeInstance(SiteFinder::class)->getSiteByPageId($relationUid);
             /** @var SiteLanguage $language */
             foreach ($site->getLanguages() as $language) {
-                $translation = $this->getTranslatedPageRecord($relationUid, $language->getLanguageId());
+                $translation = $this->getTranslatedPageRecord($relationUid, $language->getLanguageId(), $site);
                 if (empty($translation)) continue;
                 $href = UrlUtility::getAbsoluteUrl($translation['slug'], $language);
                 $hreflangs[$relationUid][$language->getHreflang()] = $href;

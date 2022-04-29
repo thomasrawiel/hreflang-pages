@@ -5,13 +5,13 @@ $EM_CONF[$_EXTKEY] = [
     'category' => 'fe',
     'author' => 'Thomas Rawiel',
     'author_email' => 'thomas.rawiel@gmail.com',
-    'state' => 'beta',
+    'state' => 'stable',
     'clearCacheOnLoad' => 0,
     'version' => 'develop',
     'constraints' => [
         'depends' => [
-            'typo3' => '10.0.0-11.99.99',
-            'seo' => '10.0.0-11.99.99'
+            'typo3' => '11.5.0-11.99.99',
+            'seo' => '11.5.0-11.99.99'
         ],
         'conflicts' => [],
         'suggests' => [],

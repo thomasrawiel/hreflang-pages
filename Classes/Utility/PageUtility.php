@@ -5,6 +5,7 @@ namespace TRAW\HreflangPages\Utility;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Context\LanguageAspectFactory;
 use TYPO3\CMS\Core\Domain\Repository\PageRepository;
+use TYPO3\CMS\Core\Site\Entity\SiteInterface;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -15,14 +16,17 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class PageUtility
 {
     /**
-     * @param $pageId
-     * @param $site
-     * @param $languageId
+     * @param int                $pageId
+     * @param int                $languageId
+     *
+     * @param SiteInterface|null $site
+     *
      * @return mixed
+     * @throws \TYPO3\CMS\Core\Exception\SiteNotFoundException
      */
-    public static function getPageTranslationRecord($pageId, $languageId, $site = null)
+    public static function getPageTranslationRecord(int $pageId, int $languageId, ?SiteInterface $site = null)
     {
-        if (empty($site)) {
+        if (is_null($site)) {
             $site = GeneralUtility::makeInstance(SiteFinder::class)->getSiteByPageId($pageId);
         }
         $targetSiteLanguage = $site->getLanguageById($languageId);

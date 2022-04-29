@@ -20,12 +20,8 @@
     }
   },
   "require": {
-    "typo3/cms-core": "^10.4",
-    "typo3/cms-seo": "^10.4"
-  },
-  "replace": {
-    "traw/hreflang-pages": "self.version",
-    "typo3-ter/hreflang-pages": "self.version"
+    "typo3/cms-core": "^10.4 || ^11.5",
+    "typo3/cms-seo": "^10.4 || ^11.5"
   },
   "extra": {
     "typo3/cms": {

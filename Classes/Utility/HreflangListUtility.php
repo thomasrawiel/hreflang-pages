@@ -20,6 +20,7 @@ use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\MathUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 /**
@@ -169,7 +170,10 @@ class HreflangListUtility
         $hreflangs = [];
 
         $relationUtility = GeneralUtility::makeInstance(RelationUtility::class);
-        $relationUids = $relationUtility->getCachedRelations($this->databaseRow['uid']);
+        //check if uid is integer, in some cases it is 'NEW123456'
+        $relationUids = MathUtility::canBeInterpretedAsInteger($this->databaseRow['uid'])
+            ? $relationUtility->getCachedRelations($this->databaseRow['uid'])
+            : [];
 
         foreach ($relationUids as $relationUid) {
             if ($relationUid === $this->databaseRow['uid']) continue;

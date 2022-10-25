@@ -9,7 +9,7 @@ call_user_func(function($_EXTKEY = 'hreflang_pages') {
     ];
 
     //Register cache
-    if (!is_array($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['tx_hreflang_pages_cache'])) {
+    if (!isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['tx_hreflang_pages_cache'])) {
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['tx_hreflang_pages_cache'] = [];
     }
     //Clear cache when pages cache is cleared

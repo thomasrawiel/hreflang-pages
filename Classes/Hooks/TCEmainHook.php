@@ -11,10 +11,12 @@ namespace TRAW\HreflangPages\Hooks;
  * The TYPO3 project - inspiring people to share!
  */
 
+use TRAW\HreflangPages\Event\PageRelationEvent;
 use TRAW\HreflangPages\Utility\RelationUtility;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheGroupException;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\EventDispatcher\EventDispatcher;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -28,17 +30,23 @@ class TCEmainHook
      */
     protected $relationUtility;
 
+
+    protected $eventDispatcher;
+
+
     public function __construct()
     {
         $this->relationUtility = GeneralUtility::makeInstance(RelationUtility::class);
+        $this->eventDispatcher = GeneralUtility::makeInstance(EventDispatcher::class);
     }
 
     /**
-     * @param $table
-     * @param $id
-     * @param $recordToDelete
-     * @param null $recordWasDeleted
+     * @param             $table
+     * @param             $id
+     * @param             $recordToDelete
+     * @param null        $recordWasDeleted
      * @param DataHandler $pObj
+     *
      * @throws NoSuchCacheGroupException
      * @throws NoSuchCacheException
      */
@@ -51,6 +59,7 @@ class TCEmainHook
 
     /**
      * @param DataHandler $pObj
+     *
      * @throws NoSuchCacheGroupException
      */
     public function processDatamap_afterAllOperations(DataHandler &$pObj)
@@ -60,10 +69,11 @@ class TCEmainHook
                 if ((int)$uid > 0) {
                     $relations = $this->relationUtility->getCachedRelations($uid);
                     $relations[] = $uid;
-                    foreach($relations as $relationUid) {
+                    foreach ($relations as $relationUid) {
                         $this->relationUtility->flushRelationCacheForPage($relationUid);
                     }
 
+                    $this->eventDispatcher->dispatch(new PageRelationEvent($uid, $relations));
                 }
             }
         }

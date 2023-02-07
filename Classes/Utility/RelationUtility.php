@@ -12,6 +12,7 @@ namespace TRAW\HreflangPages\Utility;
  */
 
 use PDO;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheGroupException;
@@ -39,6 +40,8 @@ class RelationUtility
         $this->getParameters = GeneralUtility::_GET();
     }
 
+
+
     /**
      * Get hreflang relations from cache or generate the list and cache them
      *
@@ -52,6 +55,10 @@ class RelationUtility
         if (false === $relations) {
             $relations = $this->buildRelations($pageId);
             $this->resetRelationCache($pageId, $relations);
+
+
+
+           // $this->eventDispatcher->dispatch()
         }
 
         return $this->getAllRelationUids($relations, $pageId);

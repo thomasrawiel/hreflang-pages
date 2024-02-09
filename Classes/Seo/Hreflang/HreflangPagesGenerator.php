@@ -11,8 +11,8 @@ namespace TRAW\HreflangPages\Seo\Hreflang;
  * The TYPO3 project - inspiring people to share!
  */
 
-use Psr\Http\Message\ServerRequestInterface;
 use TRAW\HreflangPages\Utility\RelationUtility;
+use TRAW\HreflangPages\Utility\RequestUtility;
 use TRAW\HreflangPages\Utility\UrlUtility;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheGroupException;
@@ -31,9 +31,14 @@ use TYPO3\CMS\Seo\HrefLang\HrefLangGenerator;
 class HreflangPagesGenerator extends HrefLangGenerator
 {
     /**
-     * @var RelationUtility
+     * @var RelationUtility|null
      */
-    protected $relationUtility;
+    protected ?RelationUtility $relationUtility = null;
+
+    /**
+     * @var RequestUtility|object|\Psr\Log\LoggerAwareInterface|(RequestUtility&\Psr\Log\LoggerAwareInterface)|(RequestUtility&\TYPO3\CMS\Core\SingletonInterface)|\TYPO3\CMS\Core\SingletonInterface|null
+     */
+    protected ?RequestUtility $requestUtility = null;
 
     /**
      * HreflangPagesGenerator constructor.
@@ -45,6 +50,7 @@ class HreflangPagesGenerator extends HrefLangGenerator
     {
         parent::__construct($cObj, $languageMenuProcessor);
         $this->relationUtility = GeneralUtility::makeInstance(RelationUtility::class);
+        $this->requestUtility = GeneralUtility::makeInstance(RequestUtility::class);
     }
 
     /**
@@ -84,15 +90,10 @@ class HreflangPagesGenerator extends HrefLangGenerator
             }
         }
 
-        $request = $this->getRequest();
-
-        if (!empty($request)) {
-            $arguments = !empty($request->getAttributes()['routing']) ? $request->getAttributes()['routing']->getArguments() : [];
-
-            if (!empty($arguments)) {
-                foreach ($hrefLangs as $lang => $href) {
-                    $hrefLangs[$lang] = $href . '?' . http_build_query($arguments);
-                }
+        //if we have query params, we must add them to the hreflang urls, because they must be self-referencing
+        if ($this->requestUtility->hasArguments()) {
+            foreach ($hrefLangs as $lang => $href) {
+                $hrefLangs[$lang] = $href . (parse_url($href, PHP_URL_QUERY) ? '&' : '?') . $this->requestUtility->getArgumentsAsQueryString();
             }
         }
 
@@ -130,11 +131,5 @@ class HreflangPagesGenerator extends HrefLangGenerator
         return $hreflangs;
     }
 
-    /**
-     * @return ServerRequestInterface|null
-     */
-    protected function getRequest(): ?ServerRequestInterface
-    {
-        return $GLOBALS['TYPO3_REQUEST'] ?? null;
-    }
+
 }

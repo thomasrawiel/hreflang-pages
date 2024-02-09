@@ -13,3 +13,7 @@ services:
         identifier: 'traw-hreflangpages/hreflangpagesGenerator'
         after: 'typo3-seo/hreflangGenerator'
         event: TYPO3\CMS\Frontend\Event\ModifyHrefLangTagsEvent
+  TRAW\HreflangPages\Seo\Canonical\ModifyCanonicalUrlEventListener:
+    tags:
+      - name: event.listener
+        identifier: 'raw-hreflang-pages/modify-url-for-canonical-tag'

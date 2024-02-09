@@ -92,8 +92,10 @@ class HreflangPagesGenerator extends HrefLangGenerator
 
         //if we have query params, we must add them to the hreflang urls, because they must be self-referencing
         if ($this->requestUtility->hasArguments()) {
-            foreach ($hrefLangs as $lang => $href) {
-                $hrefLangs[$lang] = $href . (parse_url($href, PHP_URL_QUERY) ? '&' : '?') . $this->requestUtility->getArgumentsAsQueryString();
+            if(!empty($this->requestUtility->getArguments()['tx_solr'])) {
+                foreach ($hrefLangs as $lang => $href) {
+                    $hrefLangs[$lang] = $href . (parse_url($href, PHP_URL_QUERY) ? '&' : '?') . $this->requestUtility->getArgumentsAsQueryString();
+                }
             }
         }
 

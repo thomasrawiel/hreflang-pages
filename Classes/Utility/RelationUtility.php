@@ -22,6 +22,10 @@ use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+/**
+ * Class RelationUtility
+ * @package TRAW\HreflangPages\Utility
+ */
 class RelationUtility
 {
     /**

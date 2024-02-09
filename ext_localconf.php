@@ -1,6 +1,7 @@
 <?php
 defined('TYPO3') or die('Access denied.');
-call_user_func(function($_EXTKEY = 'hreflang_pages') {
+
+call_user_func(function ($_EXTKEY = 'hreflang_pages') {
     //register renderType for Backend preview
     $GLOBALS['TYPO3_CONF_VARS']['SYS']['formEngine']['nodeRegistry'][1622628435] = [
         'nodeName' => 'hreflanglist',

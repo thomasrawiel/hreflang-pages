@@ -53,6 +53,7 @@ class HreflangListUtility
 
     /**
      * HreflangListUtility constructor.
+     *
      * @param array $data
      */
     public function __construct(array $data)
@@ -85,9 +86,10 @@ class HreflangListUtility
     }
 
     /**
-     * @param int $pageId
-     * @param int $languageId
+     * @param int                         $pageId
+     * @param int                         $languageId
      * @param ServerRequestInterface|null $request
+     *
      * @return array
      * @throws SiteNotFoundException
      */
@@ -201,7 +203,7 @@ class HreflangListUtility
     /**
      * @param string $text
      * @param string $type
-     * @param array $additionalData
+     * @param array  $additionalData
      */
     protected function addMessage(string $text, string $type = 'info', $additionalData = [])
     {
@@ -251,6 +253,7 @@ class HreflangListUtility
 
     /**
      * @param $languageId
+     *
      * @return mixed|null
      */
     protected function getPageTranslatedInLanguage($languageId)
@@ -297,6 +300,7 @@ class HreflangListUtility
 
     /**
      * @param string $content
+     *
      * @return string
      */
     protected function generateHtml(string $content): string

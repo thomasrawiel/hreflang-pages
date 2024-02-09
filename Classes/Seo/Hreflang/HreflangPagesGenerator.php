@@ -39,6 +39,7 @@ class HreflangPagesGenerator extends HrefLangGenerator
 
     /**
      * HreflangPagesGenerator constructor.
+     *
      * @param ContentObjectRenderer $cObj
      * @param LanguageMenuProcessor $languageMenuProcessor
      */
@@ -50,6 +51,7 @@ class HreflangPagesGenerator extends HrefLangGenerator
 
     /**
      * @param ModifyHrefLangTagsEvent $event
+     *
      * @throws NoSuchCacheGroupException
      */
     public function __invoke(ModifyHrefLangTagsEvent $event): void

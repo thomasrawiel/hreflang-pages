@@ -12,12 +12,10 @@ namespace TRAW\HreflangPages\Seo\Hreflang;
  */
 
 use Psr\Http\Message\ServerRequestInterface;
-use TRAW\HreflangPages\Utility\PageUtility;
 use TRAW\HreflangPages\Utility\RelationUtility;
 use TRAW\HreflangPages\Utility\UrlUtility;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheGroupException;
-use TYPO3\CMS\Core\Site\Entity\SiteInterface;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -86,11 +84,25 @@ class HreflangPagesGenerator extends HrefLangGenerator
             }
         }
 
+        $request = $this->getRequest();
+
+        if (!empty($request)) {
+            $arguments = !empty($request->getAttributes()['routing']) ? $request->getAttributes()['routing']->getArguments() : [];
+
+            if (!empty($arguments)) {
+                foreach ($hrefLangs as $lang => $href) {
+                    $hrefLangs[$lang] = $href . '?' . http_build_query($arguments);
+                }
+            }
+        }
+
+
         $event->setHrefLangs($hrefLangs);
     }
 
     /**
      * @param $pageUid
+     *
      * @return array
      * @throws NoSuchCacheGroupException|NoSuchCacheException
      */
@@ -114,6 +126,15 @@ class HreflangPagesGenerator extends HrefLangGenerator
             }
         }
 
+
         return $hreflangs;
+    }
+
+    /**
+     * @return ServerRequestInterface|null
+     */
+    protected function getRequest(): ?ServerRequestInterface
+    {
+        return $GLOBALS['TYPO3_REQUEST'] ?? null;
     }
 }

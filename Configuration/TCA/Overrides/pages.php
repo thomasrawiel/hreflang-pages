@@ -9,13 +9,13 @@ call_user_func(function ($_EXTKEY = 'hreflang_pages', $table = 'pages') {
                 'OR' => [
                     'FIELD:sys_language_uid:=:0',
                     'FIELD:sys_language_uid:REQ:false',
-                ]
+                ],
             ],
             'label' => $LLL . 'page.preview',
             'config' => [
                 'type' => 'none',
-                'renderType' => 'hreflanglist'
-            ]
+                'renderType' => 'hreflanglist',
+            ],
         ],
         'tx_hreflang_pages_pages' => [
             'exclude' => true,
@@ -23,7 +23,7 @@ call_user_func(function ($_EXTKEY = 'hreflang_pages', $table = 'pages') {
                 'OR' => [
                     'FIELD:sys_language_uid:=:0',
                     'FIELD:sys_language_uid:REQ:false',
-                ]
+                ],
             ],
             'label' => $LLL . 'connected-pages',
             'config' => [
@@ -49,7 +49,7 @@ call_user_func(function ($_EXTKEY = 'hreflang_pages', $table = 'pages') {
                 'OR' => [
                     'FIELD:sys_language_uid:=:0',
                     'FIELD:sys_language_uid:REQ:false',
-                ]
+                ],
             ],
             'label' => $LLL . 'connected-pages-2',
             'config' => [
@@ -78,7 +78,7 @@ call_user_func(function ($_EXTKEY = 'hreflang_pages', $table = 'pages') {
                 'OR' => [
                     'FIELD:sys_language_uid:=:0',
                     'FIELD:sys_language_uid:REQ:false',
-                ]
+                ],
             ],
             'label' => $LLL . 'force-x-default',
             'config' => [
@@ -88,26 +88,26 @@ call_user_func(function ($_EXTKEY = 'hreflang_pages', $table = 'pages') {
                     [
                         0 => $LLL . 'force-x-default.hint',
                         1 => '',
-                    ]
+                    ],
                 ],
                 'default' => 0,
-            ]
+            ],
         ],
     ]);
 
     $GLOBALS['TCA'][$table]['palettes']['hreflang_connections'] = [
-        'label' => $LLL.'palette.hreflang_connections',
+        'label' => $LLL . 'palette.hreflang_connections',
         'showitem' => 'linebreak--,tx_hreflang_pages_pages,tx_hreflang_pages_pages_2,--linebreak--,tx_hreflang_pages_xdefault',
     ];
     $GLOBALS['TCA'][$table]['palettes']['hreflang_preview'] = [
         'label' => 'Hreflang Preview',
-        'showitem' => 'tx_hreflang_pages_hreflanglist'
+        'showitem' => 'tx_hreflang_pages_hreflanglist',
     ];
 
     \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addToAllTCAtypes('pages',
-        "--div--;${LLL}div.hreflang,
+        '--div--;' . $LLL . 'div.hreflang,
         --palette--;;hreflang_connections,
-        --palette--;;hreflang_preview",
+        --palette--;;hreflang_preview',
         '',
         'after:sitemap_priority');
 

@@ -28,7 +28,6 @@ call_user_func(function ($_EXTKEY = 'hreflang_pages', $table = 'pages') {
             'label' => $LLL . 'connected-pages',
             'config' => [
                 'type' => 'group',
-                'internal_type' => 'db',
                 'allowed' => 'pages',
                 'foreign_table' => 'pages',
                 'MM' => 'tx_hreflang_pages_page_page_mm',
@@ -55,7 +54,6 @@ call_user_func(function ($_EXTKEY = 'hreflang_pages', $table = 'pages') {
             'config' => [
                 'readOnly' => true,
                 'type' => 'group',
-                'internal_type' => 'db',
                 'allowed' => 'pages',
                 'foreign_table' => 'pages',
                 'foreign_table_where' => 'AND pages.sys_language_uid = 0',
@@ -86,8 +84,7 @@ call_user_func(function ($_EXTKEY = 'hreflang_pages', $table = 'pages') {
                 'renderType' => 'checkboxToggle',
                 'items' => [
                     [
-                        0 => $LLL . 'force-x-default.hint',
-                        1 => '',
+                        'label'=> $LLL . 'force-x-default.hint',
                     ],
                 ],
                 'default' => 0,

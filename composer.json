@@ -20,7 +20,7 @@
     }
   },
   "require": {
-    "typo3/cms-seo": "^10.4 || ^11.5"
+    "typo3/cms-seo": "^12 || ^13"
   },
   "extra": {
     "typo3/cms": {

@@ -33,23 +33,16 @@ class RelationUtility
      */
     protected $cacheManager;
 
-    /**
-     * @var array|mixed|string|null
-     */
-    protected $getParameters;
-
     public function __construct()
     {
         $this->cacheManager = GeneralUtility::makeInstance(CacheManager::class);
-        $this->getParameters = GeneralUtility::_GET();
     }
-
-
 
     /**
      * Get hreflang relations from cache or generate the list and cache them
      *
      * @param int $pageId
+     *
      * @return array $relations
      * @throws NoSuchCacheGroupException|NoSuchCacheException
      */
@@ -59,18 +52,15 @@ class RelationUtility
         if (false === $relations) {
             $relations = $this->buildRelations($pageId);
             $this->resetRelationCache($pageId, $relations);
-
-
-
-           // $this->eventDispatcher->dispatch()
         }
 
         return $this->getAllRelationUids($relations, $pageId);
     }
 
     /**
-     * @param int $pageId
+     * @param int   $pageId
      * @param array $relations
+     *
      * @throws NoSuchCacheGroupException|NoSuchCacheException
      */
     public function resetRelationCache(int $pageId, array $relations)
@@ -86,6 +76,7 @@ class RelationUtility
 
     /**
      * @param int $pageUid
+     *
      * @throws NoSuchCacheGroupException|NoSuchCacheException
      */
     public function removeRelations(int $pageUid)
@@ -95,7 +86,7 @@ class RelationUtility
 
         $affectedRows = $queryBuilder
             ->delete('tx_hreflang_pages_page_page_mm')
-            ->where($queryBuilder->expr()->orX(
+            ->where($queryBuilder->expr()->or(
                 $queryBuilder->expr()->eq('uid_local', $queryBuilder->createNamedParameter($pageUid, PDO::PARAM_INT)),
                 $queryBuilder->expr()->eq('uid_foreign', $queryBuilder->createNamedParameter($pageUid, PDO::PARAM_INT))
             ))
@@ -110,6 +101,7 @@ class RelationUtility
 
     /**
      * @param int $pageUid
+     *
      * @throws NoSuchCacheGroupException
      */
     public function flushRelationCacheForPage(int $pageUid)
@@ -121,6 +113,7 @@ class RelationUtility
      * Get hreflang relations recursively
      *
      * @param int $pageId
+     *
      * @return array
      */
     public function buildRelations(int $pageId): array
@@ -134,7 +127,7 @@ class RelationUtility
             ->select('mm.*')
             ->from('tx_hreflang_pages_page_page_mm', 'mm')
             ->leftJoin('mm', 'pages', 'p', 'mm.uid_foreign = p.uid')
-            ->where($queryBuilder->expr()->orX(
+            ->where($queryBuilder->expr()->or(
                 $queryBuilder->expr()->eq('mm.uid_local', $pageId),
                 $queryBuilder->expr()->eq('mm.uid_foreign', $pageId)
             ))
@@ -150,7 +143,7 @@ class RelationUtility
                 ->select('mm.*')
                 ->from('tx_hreflang_pages_page_page_mm', 'mm')
                 ->leftJoin('mm', 'pages', 'p', 'mm.uid_foreign = p.uid')
-                ->where($queryBuilder2->expr()->andX(
+                ->where($queryBuilder2->expr()->and(
                     $queryBuilder2->expr()->eq('mm.uid_local', (int)$relation['uid_local']),
                     $queryBuilder2->expr()->neq('mm.uid_foreign', (int)$pageId)
                 ))
@@ -168,7 +161,8 @@ class RelationUtility
      * and return the unique uid array, excluding the current page uid
      *
      * @param array $relations
-     * @param int $pageId
+     * @param int   $pageId
+     *
      * @return array
      */
     protected function getAllRelationUids(array $relations, int $pageId): array
@@ -182,6 +176,7 @@ class RelationUtility
 
     /**
      * @param string $cacheIdentifier
+     *
      * @return FrontendInterface
      * @throws NoSuchCacheException
      */

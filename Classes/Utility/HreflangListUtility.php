@@ -141,7 +141,7 @@ class HreflangListUtility
         }
 
         if (count($hrefLangs) > 1) {
-            $content .= '<ul class="hrefLangs">';
+            $content .= '<ul class="hreflangs">';
             foreach ($hrefLangs as $hreflang => $url) {
                 $content .= "<li><strong>$hreflang</strong> ($url)</li>";
             }
@@ -279,8 +279,8 @@ class HreflangListUtility
         $result = $queryBuilder->select('sys_language_uid')
             ->from('pages')
             ->where(
-                $queryBuilder->expr()->andX(
-                    $queryBuilder->expr()->orX(
+                $queryBuilder->expr()->and(
+                    $queryBuilder->expr()->or(
                         $queryBuilder->expr()->eq('uid', $this->databaseRow['uid']),
                         $queryBuilder->expr()->eq('l10n_parent', $this->databaseRow['uid'])
                     ),

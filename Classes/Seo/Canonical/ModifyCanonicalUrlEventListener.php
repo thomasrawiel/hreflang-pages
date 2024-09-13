@@ -34,6 +34,7 @@ class ModifyCanonicalUrlEventListener {
     public function __invoke(ModifyUrlForCanonicalTagEvent $event): void
     {
         //set the canonical url to contain all request parameters
+        //@extensionScannerIgnoreLine
         $event->setUrl($this->requestUtility->getRequestUri());
     }
 }

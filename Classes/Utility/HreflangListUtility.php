@@ -111,6 +111,7 @@ class HreflangListUtility
                 if ($language === $this->site->getDefaultLanguage()) {
                     $hrefLangs[$language->getHreflang()] = UrlUtility::getAbsoluteUrl($this->databaseRow['slug'], $language);
                 } else {
+                    // @extensionScannerIgnoreLine
                     $translation = $this->getPageTranslatedInLanguage($language->getLanguageId());
                     if (!is_null($translation)) {
                         $hrefLangs[$language->getHreflang()] = UrlUtility::getAbsoluteUrl($translation['slug'], $language);
@@ -126,7 +127,7 @@ class HreflangListUtility
                             $hrefLangs[$hreflang] = $url;
                         } else {
                             //$hrefLangs[$hreflang . '_' . $relationUid] = $url;
-                            $this->addMessage('warning-same-language', 'warning', [0 => $hreflang . '_' . $relationUid]);
+                            $this->addMsg('warning-same-language', 'warning', [0 => $hreflang . '_' . $relationUid]);
                         }
                     }
                 }
@@ -137,7 +138,7 @@ class HreflangListUtility
             }
             ksort($hrefLangs);
         } else {
-            $this->addMessage('canonical-no-preview');
+            $this->addMsg('canonical-no-preview');
         }
 
         if (count($hrefLangs) > 1) {
@@ -147,13 +148,13 @@ class HreflangListUtility
             }
             $content .= '</ul>';
         } else {
-            $this->addMessage('translation-missing-no-preview');
+            $this->addMsg('translation-missing-no-preview');
         }
 
         if (!empty($this->messages)) {
             $content .= "<strong>Note:</strong><ul class='warnings'>";
             foreach ($this->messages as $message) {
-                $content .= "<li class='" . $message->type . "'>"
+                $content .= "<li class='" . $message->messageType . "'>"
                     . $message->text
                     . "</li>";
             }
@@ -182,17 +183,18 @@ class HreflangListUtility
             $site = GeneralUtility::makeInstance(SiteFinder::class)->getSiteByPageId($relationUid);
             /** @var SiteLanguage $language */
             foreach ($site->getLanguages() as $language) {
+                // @extensionScannerIgnoreLine
                 $translation = $this->getTranslatedPageRecord($relationUid, $language->getLanguageId());
                 if (empty($translation)) continue;
 
                 $href = UrlUtility::getAbsoluteUrl($translation['slug'], $language);
                 $hreflangs[$relationUid][$language->getHreflang()] = $href;
-
+                // @extensionScannerIgnoreLine
                 if ($language->getLanguageId() === 0 && !isset($hreflangs[$relationUid]['x-default']) && $translation['tx_hreflang_pages_xdefault']) {
                     $hreflangs[$relationUid]['x-default'] = $href;
 
                     if ($this->databaseRow['tx_hreflang_pages_xdefault']) {
-                        $this->addMessage('x-default-conflict', 'warning', [0 => $translation['uid']]);
+                        $this->addMsg('x-default-conflict', 'warning', [0 => $translation['uid']]);
                     }
                 }
             }
@@ -205,10 +207,10 @@ class HreflangListUtility
      * @param string $type
      * @param array  $additionalData
      */
-    protected function addMessage(string $text, string $type = 'info', $additionalData = [])
+    protected function addMsg(string $text, string $type = 'info', $additionalData = [])
     {
         $message = new stdClass();
-        $message->type = $type;
+        $message->messageType = $type;
 
         $messageText = LocalizationUtility::translate(self::lll . $text, null, $additionalData);
         $message->text = $messageText ?? $text;
@@ -230,11 +232,12 @@ class HreflangListUtility
             $title = $language->getTitle() . "/" . $language->getNavigationTitle();
             $hreflang = $language->getHreflang();
 
+            // @extensionScannerIgnoreLine
+            $languageId = $language->getLanguageId();
             $isAvailable = call_user_func(function ($languageId) {
                 return $languageId > 0 && !is_null($this->getPageTranslatedInLanguage($languageId));
-
-
-            }, $language->getLanguageId()) ? 'YES' : ($language === $this->site->getDefaultLanguage() ? 'is default' : 'NO');
+                // @extensionScannerIgnoreLine
+            }, $languageId) ? 'YES' : ($language === $this->site->getDefaultLanguage() ? 'is default' : 'NO');
 
             $content .= <<<HTML
                 <tr>

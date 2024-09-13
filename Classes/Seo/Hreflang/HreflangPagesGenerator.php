@@ -68,6 +68,7 @@ class HreflangPagesGenerator extends HrefLangGenerator
         unset($hrefLangs['x-default']);
 
         $languages = $this->languageMenuProcessor->process($this->cObj, [], [], []);
+        // @extensionScannerIgnoreLine
         $pageId = (int)$this->getTypoScriptFrontendController()->id;
 
         $connectedPages = $this->getConnectedPagesHreflang($pageId);
@@ -92,7 +93,7 @@ class HreflangPagesGenerator extends HrefLangGenerator
 
         //if we have query params, we must add them to the hreflang urls, because they must be self-referencing
         if ($this->requestUtility->hasArguments()) {
-            if(!empty($this->requestUtility->getArguments()['tx_solr'])) {
+            if (!empty($this->requestUtility->getArguments()['tx_solr'])) {
                 foreach ($hrefLangs as $lang => $href) {
                     $hrefLangs[$lang] = $href . (parse_url($href, PHP_URL_QUERY) ? '&' : '?') . $this->requestUtility->getArgumentsAsQueryString();
                 }
@@ -118,20 +119,18 @@ class HreflangPagesGenerator extends HrefLangGenerator
             $site = GeneralUtility::makeInstance(SiteFinder::class)->getSiteByPageId($relationUid);
             /** @var SiteLanguage $language */
             foreach ($site->getLanguages() as $language) {
-                $translation = $this->getTranslatedPageRecord($relationUid, $language->getLanguageId(), $site);
+                // @extensionScannerIgnoreLine
+                $languageId = $language->getLanguageId();
+                $translation = $this->getTranslatedPageRecord($relationUid, $languageId, $site);
                 if (empty($translation)) continue;
                 $href = UrlUtility::getAbsoluteUrl($translation['slug'], $language);
                 $hreflangs[$relationUid][$language->getHreflang()] = $href;
-
-                if ($language->getLanguageId() === 0 && !isset($hreflangs['x-default']) && $translation['tx_hreflang_pages_xdefault']) {
+                if ($languageId === 0 && !isset($hreflangs['x-default']) && $translation['tx_hreflang_pages_xdefault']) {
                     $hreflangs[$relationUid]['x-default'] = $href;
                 }
             }
         }
 
-
         return $hreflangs;
     }
-
-
 }

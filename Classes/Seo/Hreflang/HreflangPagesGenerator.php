@@ -26,7 +26,6 @@ use TYPO3\CMS\Seo\HrefLang\HrefLangGenerator;
 
 /**
  * Class HreflangPagesGenerator
- * @package TRAW\HreflangPages\Seo\Hreflang
  */
 class HreflangPagesGenerator extends HrefLangGenerator
 {
@@ -36,7 +35,7 @@ class HreflangPagesGenerator extends HrefLangGenerator
     protected ?RelationUtility $relationUtility = null;
 
     /**
-     * @var RequestUtility|object|\Psr\Log\LoggerAwareInterface|(RequestUtility&\Psr\Log\LoggerAwareInterface)|(RequestUtility&\TYPO3\CMS\Core\SingletonInterface)|\TYPO3\CMS\Core\SingletonInterface|null
+     * @var null|RequestUtility
      */
     protected ?RequestUtility $requestUtility = null;
 
@@ -77,10 +76,9 @@ class HreflangPagesGenerator extends HrefLangGenerator
                 foreach ($relationHreflang as $hreflang => $url) {
                     if (!isset($hrefLangs[$hreflang])) {
                         $hrefLangs[$hreflang] = $url;
-                    } else {
-                        //don't render duplicates
-                        //$hrefLangs[$hreflang . '_' . $relationUid] = $url;
                     }
+                    //don't render duplicates
+                    //$hrefLangs[$hreflang . '_' . $relationUid] = $url;
                 }
             }
             ksort($hrefLangs);
@@ -99,7 +97,6 @@ class HreflangPagesGenerator extends HrefLangGenerator
                 }
             }
         }
-
 
         $event->setHrefLangs($hrefLangs);
     }
@@ -122,7 +119,9 @@ class HreflangPagesGenerator extends HrefLangGenerator
                 // @extensionScannerIgnoreLine
                 $languageId = $language->getLanguageId();
                 $translation = $this->getTranslatedPageRecord($relationUid, $languageId, $site);
-                if (empty($translation)) continue;
+                if (empty($translation)) {
+                    continue;
+                }
                 $href = UrlUtility::getAbsoluteUrl($translation['slug'], $language);
                 $hreflangs[$relationUid][$language->getHreflang()] = $href;
                 if ($languageId === 0 && !isset($hreflangs['x-default']) && $translation['tx_hreflang_pages_xdefault']) {

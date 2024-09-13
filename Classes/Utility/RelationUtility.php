@@ -23,7 +23,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Class RelationUtility
- * @package TRAW\HreflangPages\Utility
  */
 class RelationUtility
 {
@@ -32,9 +31,6 @@ class RelationUtility
      */
     protected $cacheManager;
 
-    /**
-     *
-     */
     public function __construct()
     {
         $this->cacheManager = GeneralUtility::makeInstance(CacheManager::class);
@@ -43,15 +39,15 @@ class RelationUtility
     /**
      * Get hreflang relations from cache or generate the list and cache them
      *
-     * @param int $pageId
+     * @param $pageId
      *
      * @return array $relations
      * @throws NoSuchCacheGroupException|NoSuchCacheException
      */
-    public function getCachedRelations(int $pageId): array
+    public function getCachedRelations($pageId): array
     {
         $relations = $this->getCacheInstance()->get($pageId);
-        if (false === $relations) {
+        if ($relations === false) {
             $relations = $this->buildRelations($pageId);
             $this->resetRelationCache($pageId, $relations);
         }
@@ -93,7 +89,7 @@ class RelationUtility
                 $queryBuilder->expr()->eq('uid_foreign', $queryBuilder->createNamedParameter($pageUid, PDO::PARAM_INT))
             ))
             ->execute();
-        if ($affectedRows > 0) {
+        if ((int)$affectedRows > 0) {
             $this->flushRelationCacheForPage($pageUid);
             foreach ($relations as $relationUid) {
                 $this->flushRelationCacheForPage($relationUid);
@@ -155,7 +151,7 @@ class RelationUtility
         }
 
         //eliminate duplicates
-        return array_map("unserialize", array_unique(array_map("serialize", $relations)));
+        return array_map('unserialize', array_unique(array_map('serialize', $relations)));
     }
 
     /**

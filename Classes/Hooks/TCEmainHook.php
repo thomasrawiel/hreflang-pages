@@ -21,7 +21,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Class TCEmainHook
- * @package TRAW\HreflangPages\Hooks
  */
 class TCEmainHook
 {
@@ -30,16 +29,11 @@ class TCEmainHook
      */
     protected $relationUtility;
 
-
     /**
      * @var mixed|object|\Psr\Log\LoggerAwareInterface|\TYPO3\CMS\Core\SingletonInterface|null
      */
     protected $eventDispatcher;
 
-
-    /**
-     *
-     */
     public function __construct()
     {
         $this->relationUtility = GeneralUtility::makeInstance(RelationUtility::class);

@@ -29,7 +29,6 @@ namespace TRAW\HreflangPages\Event;
 
 /**
  * Class PageRelationEvent
- * @package TRAW\HreflangPages\Event
  */
 class PageRelationEvent
 {
@@ -58,4 +57,3 @@ class PageRelationEvent
         return $this->targets;
     }
 }
-

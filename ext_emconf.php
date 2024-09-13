@@ -1,4 +1,5 @@
 <?php
+
 $EM_CONF[$_EXTKEY] = [
     'title' => 'Hreflang Pages',
     'description' => 'Extends TYPO3 EXT:seo hreflang functionality',

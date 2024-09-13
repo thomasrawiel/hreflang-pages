@@ -11,7 +11,6 @@ namespace TRAW\HreflangPages\Utility;
  * The TYPO3 project - inspiring people to share!
  */
 
-use Psr\Http\Message\ServerRequestInterface;
 use stdClass;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
@@ -25,14 +24,10 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 /**
  * Class HreflangListUtility
- * @package TRAW\HreflangPages\Utility
  */
 class HreflangListUtility
 {
-    /**
-     *
-     */
-    protected const lll = "LLL:EXT:hreflang_pages/Resources/Private/Language/locallang_tca.xlf:";
+    protected const lll = 'LLL:EXT:hreflang_pages/Resources/Private/Language/locallang_tca.xlf:';
     /**
      * @var array
      */
@@ -42,9 +37,9 @@ class HreflangListUtility
      */
     protected $pageLanguageOverlayRows;
     /**
-     * @var Site
+     * @var null|Site
      */
-    protected $site;
+    protected ?Site $site = null;
 
     /**
      * @var array
@@ -72,12 +67,11 @@ class HreflangListUtility
             return $this->generateHtml(LocalizationUtility::translate(self::lll . 'no-index-no-preview'));
         }
 
-        if (isset($this->site)) {
+        if (!empty($this->site)) {
             $content = "<div class='row'>"
-                . "<div class='col-md-6'>" . $this->getHreflangPreview() . "</div>"
-                . "<div class='col-md-6'>" . $this->getLanguagePreview() . "</div>"
-                . "</div>";
-
+                . "<div class='col-md-6'>" . $this->getHreflangPreview() . '</div>'
+                . "<div class='col-md-6'>" . $this->getLanguagePreview() . '</div>'
+                . '</div>';
         } else {
             $content = LocalizationUtility::translate(self::lll . 'siteconfig-no-preview');
         }
@@ -86,9 +80,8 @@ class HreflangListUtility
     }
 
     /**
-     * @param int                         $pageId
-     * @param int                         $languageId
-     * @param ServerRequestInterface|null $request
+     * @param int $pageId
+     * @param int $languageId
      *
      * @return array
      * @throws SiteNotFoundException
@@ -103,7 +96,7 @@ class HreflangListUtility
      */
     protected function getHreflangPreview(): string
     {
-        $content = "<strong class='headline'>" . LocalizationUtility::translate(self::lll . 'hreflang.headline') . "</strong>";
+        $content = "<strong class='headline'>" . LocalizationUtility::translate(self::lll . 'hreflang.headline') . '</strong>';
 
         $hrefLangs = [];
         if (empty($this->databaseRow['canonical_link'])) {
@@ -156,9 +149,9 @@ class HreflangListUtility
             foreach ($this->messages as $message) {
                 $content .= "<li class='" . $message->messageType . "'>"
                     . $message->text
-                    . "</li>";
+                    . '</li>';
             }
-            $content .= "</ul>";
+            $content .= '</ul>';
         }
 
         return $content;
@@ -169,7 +162,6 @@ class HreflangListUtility
      */
     protected function getConnectedHreflangs()
     {
-
         $hreflangs = [];
 
         $relationUtility = GeneralUtility::makeInstance(RelationUtility::class);
@@ -179,18 +171,22 @@ class HreflangListUtility
             : [];
 
         foreach ($relationUids as $relationUid) {
-            if ($relationUid === $this->databaseRow['uid']) continue;
+            if ($relationUid === $this->databaseRow['uid']) {
+                continue;
+            }
             $site = GeneralUtility::makeInstance(SiteFinder::class)->getSiteByPageId($relationUid);
             /** @var SiteLanguage $language */
             foreach ($site->getLanguages() as $language) {
                 // @extensionScannerIgnoreLine
                 $languageId = $language->getLanguageId();
                 $translation = $this->getTranslatedPageRecord($relationUid, $languageId);
-                if (empty($translation)) continue;
+                if (empty($translation)) {
+                    continue;
+                }
 
                 $href = UrlUtility::getAbsoluteUrl($translation['slug'], $language);
                 $hreflangs[$relationUid][$language->getHreflang()] = $href;
-                
+
                 if ($languageId === 0 && !isset($hreflangs[$relationUid]['x-default']) && $translation['tx_hreflang_pages_xdefault']) {
                     $hreflangs[$relationUid]['x-default'] = $href;
 
@@ -224,13 +220,13 @@ class HreflangListUtility
      */
     protected function getLanguagePreview(): string
     {
-        $content = "<strong class='headline'>" . LocalizationUtility::translate(self::lll . 'languages.headline') . "</strong>"
+        $content = "<strong class='headline'>" . LocalizationUtility::translate(self::lll . 'languages.headline') . '</strong>'
             . "<table class='languages'>
                    <thead><tr><th>Title/ Navtitle</th><th>Hreflang</th><th>Translated</th></tr></thead>";
 
-        $content .= "<tbody>";
+        $content .= '<tbody>';
         foreach ($this->site->getLanguages() as $language) {
-            $title = $language->getTitle() . "/" . $language->getNavigationTitle();
+            $title = $language->getTitle() . '/' . $language->getNavigationTitle();
             $hreflang = $language->getHreflang();
 
             // @extensionScannerIgnoreLine
@@ -249,10 +245,9 @@ class HreflangListUtility
                 HTML;
         }
 
-        $content .= "</tbody></table>";
+        $content .= '</tbody></table>';
 
         return $content;
-
     }
 
     /**
@@ -262,7 +257,9 @@ class HreflangListUtility
      */
     protected function getPageTranslatedInLanguage($languageId)
     {
-        if (empty($this->pageLanguageOverlayRows)) return null;
+        if (empty($this->pageLanguageOverlayRows)) {
+            return null;
+        }
 
         foreach ($this->pageLanguageOverlayRows as $overlay) {
             if ($languageId === $overlay['sys_language_uid']
@@ -311,6 +308,6 @@ class HreflangListUtility
     {
         return "<section class='tx-hreflang-list'>"
             . $content
-            . "</section >";
+            . '</section >';
     }
 }

@@ -16,7 +16,6 @@ use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 
 /**
  * Class UrlUtility
- * @package TRAW\HreflangPages\Utility
  */
 class UrlUtility
 {

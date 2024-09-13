@@ -15,7 +15,6 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Class RequestUtility
- * @package TRAW\HreflangPages\Utility
  */
 class RequestUtility
 {
@@ -29,9 +28,6 @@ class RequestUtility
      */
     protected array $arguments = [];
 
-    /**
-     *
-     */
     public function __construct()
     {
         $this->request = $this->getRequest();
@@ -80,5 +76,4 @@ class RequestUtility
     {
         return $GLOBALS['TYPO3_REQUEST'] ?? null;
     }
-
 }

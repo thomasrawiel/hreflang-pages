@@ -1,4 +1,5 @@
 <?php
+
 defined('TYPO3') or die('Access denied.');
 call_user_func(function ($_EXTKEY = 'hreflang_pages', $table = 'pages') {
     $LLL = 'LLL:EXT:hreflang_pages/Resources/Private/Language/locallang_tca.xlf:';
@@ -84,7 +85,7 @@ call_user_func(function ($_EXTKEY = 'hreflang_pages', $table = 'pages') {
                 'renderType' => 'checkboxToggle',
                 'items' => [
                     [
-                        'label'=> $LLL . 'force-x-default.hint',
+                        'label' => $LLL . 'force-x-default.hint',
                     ],
                 ],
                 'default' => 0,
@@ -101,11 +102,12 @@ call_user_func(function ($_EXTKEY = 'hreflang_pages', $table = 'pages') {
         'showitem' => 'tx_hreflang_pages_hreflanglist',
     ];
 
-    \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addToAllTCAtypes('pages',
+    \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addToAllTCAtypes(
+        'pages',
         '--div--;' . $LLL . 'div.hreflang,
         --palette--;;hreflang_connections,
         --palette--;;hreflang_preview',
         '',
-        'after:sitemap_priority');
-
+        'after:sitemap_priority'
+    );
 });

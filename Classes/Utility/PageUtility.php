@@ -11,7 +11,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Class PageUtility
- * @package TRAW\HreflangPages\Utility
  */
 class PageUtility
 {

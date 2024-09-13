@@ -11,7 +11,8 @@ use TYPO3\CMS\Seo\Event\ModifyUrlForCanonicalTagEvent;
  * Class ModifyCanonicalUrlEventListener
  * @package TRAW\HreflangPages\Seo\Canonical
  */
-class ModifyCanonicalUrlEventListener {
+class ModifyCanonicalUrlEventListener
+{
 
     /**
      * @var RequestUtility|object|\Psr\Log\LoggerAwareInterface|(RequestUtility&\Psr\Log\LoggerAwareInterface)|(RequestUtility&\TYPO3\CMS\Core\SingletonInterface)|\TYPO3\CMS\Core\SingletonInterface|null

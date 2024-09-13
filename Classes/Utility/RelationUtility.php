@@ -12,7 +12,6 @@ namespace TRAW\HreflangPages\Utility;
  */
 
 use PDO;
-use Psr\EventDispatcher\EventDispatcherInterface;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheGroupException;
@@ -33,6 +32,9 @@ class RelationUtility
      */
     protected $cacheManager;
 
+    /**
+     *
+     */
     public function __construct()
     {
         $this->cacheManager = GeneralUtility::makeInstance(CacheManager::class);

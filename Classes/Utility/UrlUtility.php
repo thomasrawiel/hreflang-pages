@@ -14,6 +14,10 @@ namespace TRAW\HreflangPages\Utility;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 
+/**
+ * Class UrlUtility
+ * @package TRAW\HreflangPages\Utility
+ */
 class UrlUtility
 {
     /**

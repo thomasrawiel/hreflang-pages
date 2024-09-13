@@ -184,13 +184,14 @@ class HreflangListUtility
             /** @var SiteLanguage $language */
             foreach ($site->getLanguages() as $language) {
                 // @extensionScannerIgnoreLine
-                $translation = $this->getTranslatedPageRecord($relationUid, $language->getLanguageId());
+                $languageId = $language->getLanguageId();
+                $translation = $this->getTranslatedPageRecord($relationUid, $languageId);
                 if (empty($translation)) continue;
 
                 $href = UrlUtility::getAbsoluteUrl($translation['slug'], $language);
                 $hreflangs[$relationUid][$language->getHreflang()] = $href;
-                // @extensionScannerIgnoreLine
-                if ($language->getLanguageId() === 0 && !isset($hreflangs[$relationUid]['x-default']) && $translation['tx_hreflang_pages_xdefault']) {
+                
+                if ($languageId === 0 && !isset($hreflangs[$relationUid]['x-default']) && $translation['tx_hreflang_pages_xdefault']) {
                     $hreflangs[$relationUid]['x-default'] = $href;
 
                     if ($this->databaseRow['tx_hreflang_pages_xdefault']) {

@@ -19,11 +19,21 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class RequestUtility
 {
+    /**
+     * @var ServerRequestInterface|null
+     */
     protected ?ServerRequestInterface $request = null;
 
+    /**
+     * @var array
+     */
     protected array $arguments = [];
 
-    public function __construct() {
+    /**
+     *
+     */
+    public function __construct()
+    {
         $this->request = $this->getRequest();
 
         if (!empty($this->request)) {
@@ -31,21 +41,33 @@ class RequestUtility
         }
     }
 
+    /**
+     * @return string
+     */
     public function getRequestUri(): string
     {
         return $this->request->getUri();
     }
 
+    /**
+     * @return bool
+     */
     public function hasArguments(): bool
     {
         return !empty($this->arguments);
     }
 
+    /**
+     * @return array
+     */
     public function getArguments(): array
     {
         return $this->arguments;
     }
 
+    /**
+     * @return string
+     */
     public function getArgumentsAsQueryString(): string
     {
         return http_build_query($this->arguments);

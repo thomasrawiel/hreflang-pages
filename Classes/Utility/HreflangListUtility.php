@@ -37,7 +37,7 @@ class HreflangListUtility
      */
     protected $pageLanguageOverlayRows;
     /**
-     * @var null|Site
+     * @var Site|null
      */
     protected ?Site $site = null;
 

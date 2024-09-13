@@ -35,7 +35,7 @@ class HreflangPagesGenerator extends HrefLangGenerator
     protected ?RelationUtility $relationUtility = null;
 
     /**
-     * @var null|RequestUtility
+     * @var RequestUtility|null
      */
     protected ?RequestUtility $requestUtility = null;
 

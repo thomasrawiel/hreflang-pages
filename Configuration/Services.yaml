@@ -16,4 +16,4 @@ services:
   TRAW\HreflangPages\Seo\Canonical\ModifyCanonicalUrlEventListener:
     tags:
       - name: event.listener
-        identifier: 'raw-hreflang-pages/modify-url-for-canonical-tag'
+        identifier: 'traw-hreflang-pages/modify-url-for-canonical-tag'

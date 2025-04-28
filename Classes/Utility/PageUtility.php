@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace TRAW\HreflangPages\Utility;
 
@@ -12,7 +13,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 /**
  * Class PageUtility
  */
-class PageUtility
+final class PageUtility
 {
     /**
      * @param int                $pageId
@@ -23,7 +24,7 @@ class PageUtility
      * @return mixed
      * @throws \TYPO3\CMS\Core\Exception\SiteNotFoundException
      */
-    public static function getPageTranslationRecord(int $pageId, int $languageId, ?SiteInterface $site = null)
+    public static function getPageTranslationRecord(int $pageId, int $languageId, ?SiteInterface $site = null): ?array
     {
         if (is_null($site)) {
             $site = GeneralUtility::makeInstance(SiteFinder::class)->getSiteByPageId($pageId);

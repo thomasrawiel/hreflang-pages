@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace TRAW\HreflangPages\Hooks;
 
@@ -22,7 +23,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 /**
  * Class TCEmainHook
  */
-class TCEmainHook
+final class TCEmainHook
 {
     /**
      * @var RelationUtility

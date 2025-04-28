@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace TRAW\HreflangPages\Utility;
 
@@ -17,7 +18,7 @@ use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 /**
  * Class UrlUtility
  */
-class UrlUtility
+final class UrlUtility
 {
     /**
      * @param string       $url

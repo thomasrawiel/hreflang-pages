@@ -95,7 +95,7 @@ call_user_func(function ($_EXTKEY = 'hreflang_pages', $table = 'pages') {
 
     $GLOBALS['TCA'][$table]['palettes']['hreflang_connections'] = [
         'label' => $LLL . 'palette.hreflang_connections',
-        'showitem' => 'linebreak--,tx_hreflang_pages_pages,tx_hreflang_pages_pages_2,--linebreak--,tx_hreflang_pages_xdefault',
+        'showitem' => 'tx_hreflang_pages_pages,tx_hreflang_pages_pages_2,--linebreak--,tx_hreflang_pages_xdefault',
     ];
     $GLOBALS['TCA'][$table]['palettes']['hreflang_preview'] = [
         'label' => 'Hreflang Preview',

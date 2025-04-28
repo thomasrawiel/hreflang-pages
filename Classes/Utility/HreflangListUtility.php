@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace TRAW\HreflangPages\Utility;
 
@@ -15,6 +16,7 @@ use stdClass;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
+use TYPO3\CMS\Core\Site\Entity\NullSite;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\CMS\Core\Site\SiteFinder;
@@ -25,7 +27,7 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 /**
  * Class HreflangListUtility
  */
-class HreflangListUtility
+final class HreflangListUtility
 {
     protected const lll = 'LLL:EXT:hreflang_pages/Resources/Private/Language/locallang_tca.xlf:';
     /**
@@ -39,7 +41,7 @@ class HreflangListUtility
     /**
      * @var Site|null
      */
-    protected ?Site $site = null;
+    protected Site|NullSite|null $site = null;
 
     /**
      * @var array
@@ -67,7 +69,7 @@ class HreflangListUtility
             return $this->generateHtml(LocalizationUtility::translate(self::lll . 'no-index-no-preview'));
         }
 
-        if (!empty($this->site)) {
+        if (!empty($this->site) && is_a($this->site, Site::class)) {
             $content = "<div class='row'>"
                 . "<div class='col-md-6'>" . $this->getHreflangPreview() . '</div>'
                 . "<div class='col-md-6'>" . $this->getLanguagePreview() . '</div>'
@@ -76,7 +78,7 @@ class HreflangListUtility
             $content = LocalizationUtility::translate(self::lll . 'siteconfig-no-preview');
         }
 
-        return $this->generateHtml($content);
+        return $this->generateHtml($content ?? '');
     }
 
     /**
@@ -88,7 +90,7 @@ class HreflangListUtility
      */
     protected function getTranslatedPageRecord(int $pageId, int $languageId): array
     {
-        return PageUtility::getPageTranslationRecord($pageId, $languageId);
+        return PageUtility::getPageTranslationRecord($pageId, $languageId) ?? [];
     }
 
     /**
@@ -160,7 +162,7 @@ class HreflangListUtility
     /**
      * @return array
      */
-    protected function getConnectedHreflangs()
+    protected function getConnectedHreflangs(): array
     {
         $hreflangs = [];
 
@@ -204,7 +206,7 @@ class HreflangListUtility
      * @param string $type
      * @param array  $additionalData
      */
-    protected function addMsg(string $text, string $type = 'info', $additionalData = [])
+    protected function addMsg(string $text, string $type = 'info', $additionalData = []): void
     {
         $message = new stdClass();
         $message->messageType = $type;
@@ -253,9 +255,9 @@ class HreflangListUtility
     /**
      * @param $languageId
      *
-     * @return mixed|null
+     * @return array|null
      */
-    protected function getPageTranslatedInLanguage($languageId)
+    protected function getPageTranslatedInLanguage($languageId): ?array
     {
         if (empty($this->pageLanguageOverlayRows)) {
             return null;
@@ -273,7 +275,7 @@ class HreflangListUtility
     /**
      * @return array
      */
-    protected function getPageTranslationLanguages()
+    protected function getPageTranslationLanguages(): array
     {
         /** @var QueryBuilder $queryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');

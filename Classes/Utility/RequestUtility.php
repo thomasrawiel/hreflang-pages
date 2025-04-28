@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace TRAW\HreflangPages\Utility;
 
@@ -16,7 +17,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Class RequestUtility
  */
-class RequestUtility
+final class RequestUtility
 {
     /**
      * @var ServerRequestInterface|null
@@ -42,7 +43,7 @@ class RequestUtility
      */
     public function getRequestUri(): string
     {
-        return $this->request->getUri();
+        return $this->request->getUri()->__toString();
     }
 
     /**

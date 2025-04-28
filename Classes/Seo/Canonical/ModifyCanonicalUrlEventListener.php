@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace TRAW\HreflangPages\Seo\Canonical;
 
@@ -9,7 +10,7 @@ use TYPO3\CMS\Seo\Event\ModifyUrlForCanonicalTagEvent;
 /**
  * Class ModifyCanonicalUrlEventListener
  */
-class ModifyCanonicalUrlEventListener
+final class ModifyCanonicalUrlEventListener
 {
     /**
      * @var RequestUtility|null

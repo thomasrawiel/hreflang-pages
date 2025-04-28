@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace TRAW\HreflangPages\Form\Element;
 
@@ -19,7 +20,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 /**
  * Class HreflangList
  */
-class HreflangList extends AbstractFormElement
+final class HreflangList extends AbstractFormElement
 {
     /**
      * @var HreflangListUtility

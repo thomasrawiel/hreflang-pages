@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace TRAW\HreflangPages\Seo\Hreflang;
 
@@ -27,7 +28,7 @@ use TYPO3\CMS\Seo\HrefLang\HrefLangGenerator;
 /**
  * Class HreflangPagesGenerator
  */
-class HreflangPagesGenerator extends HrefLangGenerator
+final class HreflangPagesGenerator extends HrefLangGenerator
 {
     /**
      * @var RelationUtility|null

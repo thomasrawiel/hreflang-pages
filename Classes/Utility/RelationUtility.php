@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace TRAW\HreflangPages\Utility;
 
@@ -24,7 +25,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 /**
  * Class RelationUtility
  */
-class RelationUtility
+final class RelationUtility
 {
     /**
      * @var CacheManager
@@ -61,7 +62,7 @@ class RelationUtility
      *
      * @throws NoSuchCacheGroupException|NoSuchCacheException
      */
-    public function resetRelationCache(int $pageId, array $relations)
+    public function resetRelationCache(int $pageId, array $relations): void
     {
         $tags = array_map(function ($value) {
             return 'pageId_' . $value['uid_foreign'];
@@ -77,7 +78,7 @@ class RelationUtility
      *
      * @throws NoSuchCacheGroupException|NoSuchCacheException
      */
-    public function removeRelations(int $pageUid)
+    public function removeRelations(int $pageUid): void
     {
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_hreflang_pages_page_page_mm');
         $relations = $this->getCachedRelations($pageUid);
@@ -102,7 +103,7 @@ class RelationUtility
      *
      * @throws NoSuchCacheGroupException
      */
-    public function flushRelationCacheForPage(int $pageUid)
+    public function flushRelationCacheForPage(int $pageUid): void
     {
         $this->cacheManager->flushCachesInGroupByTag('pages', 'pageId_' . $pageUid);
     }

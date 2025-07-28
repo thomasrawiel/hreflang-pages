@@ -61,15 +61,18 @@ final class HreflangPagesGenerator extends HrefLangGenerator
     public function __invoke(ModifyHrefLangTagsEvent $event): void
     {
         $hrefLangs = $event->getHrefLangs();
-        if ((int)$this->getTypoScriptFrontendController()->page['no_index'] === 1) {
+        $request = $event->getRequest();
+        $pageInformation = $request->getAttribute('frontend.page.information');
+        $pageRecord = $pageInformation->getPageRecord();
+
+        if ((int)$pageRecord['no_index'] === 1) {
             return;
         }
         //remove the x-default, we will determine that later
         unset($hrefLangs['x-default']);
 
         $languages = $this->languageMenuProcessor->process($this->cObj, [], [], []);
-        // @extensionScannerIgnoreLine
-        $pageId = (int)$this->getTypoScriptFrontendController()->id;
+        $pageId = $pageInformation->getId();
 
         $connectedPages = $this->getConnectedPagesHreflang($pageId);
         if (!empty($connectedPages)) {

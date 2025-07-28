@@ -23,23 +23,13 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 final class HreflangList extends AbstractFormElement
 {
     /**
-     * @var HreflangListUtility
-     */
-    protected $hreflangListUtility;
-
-    public function __construct(NodeFactory $nodeFactory, array $data)
-    {
-        parent::__construct($nodeFactory, $data);
-        $this->hreflangListUtility = GeneralUtility::makeInstance(HreflangListUtility::class, $data);
-    }
-
-    /**
      * @inheritDoc
      */
-    public function render()
+    public function render(): array
     {
         $result = $this->initializeResultArray();
-        $result['html'] = $this->hreflangListUtility->generateHrefLangList();
+        $result['html'] = (GeneralUtility::makeInstance(HreflangListUtility::class, $this->data))
+            ->generateHrefLangList();
 
         return $result;
     }

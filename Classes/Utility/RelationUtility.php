@@ -12,7 +12,6 @@ namespace TRAW\HreflangPages\Utility;
  * The TYPO3 project - inspiring people to share!
  */
 
-use PDO;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheGroupException;
@@ -30,10 +29,13 @@ final class RelationUtility
     /**
      * @var CacheManager
      */
-    protected $cacheManager;
+    protected CacheManager $cacheManager;
+
+    protected ConnectionPool $connectionPool;
 
     public function __construct()
     {
+        $this->connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
         $this->cacheManager = GeneralUtility::makeInstance(CacheManager::class);
     }
 
@@ -80,16 +82,16 @@ final class RelationUtility
      */
     public function removeRelations(int $pageUid): void
     {
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_hreflang_pages_page_page_mm');
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable('tx_hreflang_pages_page_page_mm');
         $relations = $this->getCachedRelations($pageUid);
 
         $affectedRows = $queryBuilder
             ->delete('tx_hreflang_pages_page_page_mm')
             ->where($queryBuilder->expr()->or(
-                $queryBuilder->expr()->eq('uid_local', $queryBuilder->createNamedParameter($pageUid, PDO::PARAM_INT)),
-                $queryBuilder->expr()->eq('uid_foreign', $queryBuilder->createNamedParameter($pageUid, PDO::PARAM_INT))
+                $queryBuilder->expr()->eq('uid_local', $queryBuilder->createNamedParameter($pageUid, \TYPO3\CMS\Core\Database\Connection::PARAM_INT)),
+                $queryBuilder->expr()->eq('uid_foreign', $queryBuilder->createNamedParameter($pageUid, \TYPO3\CMS\Core\Database\Connection::PARAM_INT))
             ))
-            ->execute();
+            ->executeQuery();
         if ((int)$affectedRows > 0) {
             $this->flushRelationCacheForPage($pageUid);
             foreach ($relations as $relationUid) {
@@ -118,23 +120,21 @@ final class RelationUtility
     public function buildRelations(int $pageId): array
     {
         /** @var QueryBuilder $queryBuilder */
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+        $queryBuilder = $this->connectionPool
             ->getQueryBuilderForTable('pages');
         $queryBuilder->getRestrictions()->removeAll()
             ->add(GeneralUtility::makeInstance(DeletedRestriction::class));
         $relations = $queryBuilder
             ->select('mm.*')
             ->from('tx_hreflang_pages_page_page_mm', 'mm')
-            ->leftJoin('mm', 'pages', 'p', 'mm.uid_foreign = p.uid')
-            ->where($queryBuilder->expr()->or(
+            ->leftJoin('mm', 'pages', 'p', 'mm.uid_foreign = p.uid')->where($queryBuilder->expr()->or(
                 $queryBuilder->expr()->eq('mm.uid_local', $pageId),
                 $queryBuilder->expr()->eq('mm.uid_foreign', $pageId)
-            ))
-            ->execute()
+            ))->executeQuery()
             ->fetchAllAssociative();
 
         foreach ($relations as $relation) {
-            $queryBuilder2 = GeneralUtility::makeInstance(ConnectionPool::class)
+            $queryBuilder2 = $this->connectionPool
                 ->getQueryBuilderForTable('pages');
             $queryBuilder2->getRestrictions()->removeAll()
                 ->add(GeneralUtility::makeInstance(DeletedRestriction::class));
@@ -146,7 +146,7 @@ final class RelationUtility
                     $queryBuilder2->expr()->eq('mm.uid_local', (int)$relation['uid_local']),
                     $queryBuilder2->expr()->neq('mm.uid_foreign', (int)$pageId)
                 ))
-                ->execute()
+                ->executeQuery()
                 ->fetchAllAssociative();
             $relations = array_merge($relations, $indirectRelations);
         }

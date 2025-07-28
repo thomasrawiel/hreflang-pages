@@ -51,7 +51,7 @@ final class TCEmainHook
      * @throws NoSuchCacheGroupException
      * @throws NoSuchCacheException
      */
-    public function processCmdmap_deleteAction($table, $id, $recordToDelete, &$recordWasDeleted, DataHandler &$pObj)
+    public function processCmdmap_deleteAction($table, $id, $recordToDelete, &$recordWasDeleted, DataHandler &$pObj): void
     {
         if ($table === 'pages') {
             $this->relationUtility->removeRelations($recordToDelete['uid']);
@@ -63,7 +63,7 @@ final class TCEmainHook
      *
      * @throws NoSuchCacheGroupException
      */
-    public function processDatamap_afterAllOperations(DataHandler &$pObj)
+    public function processDatamap_afterAllOperations(DataHandler &$pObj): void
     {
         if (isset($pObj->datamap['pages'])) {
             foreach ($pObj->datamap['pages'] as $uid => $page) {

@@ -277,8 +277,8 @@ final class HreflangListUtility
      */
     protected function getPageTranslationLanguages(): array
     {
-        /** @var QueryBuilder $queryBuilder */
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getQueryBuilderForTable('pages');
         $result = $queryBuilder->select('sys_language_uid')
             ->from('pages')
             ->where(
@@ -290,7 +290,7 @@ final class HreflangListUtility
                     $queryBuilder->expr()->eq('hidden', 0),
                     $queryBuilder->expr()->eq('deleted', 0)
                 )
-            )->execute()
+            )->executeQuery()
             ->fetchAllAssociative();
 
         $translations = [];

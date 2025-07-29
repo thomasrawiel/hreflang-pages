@@ -29,6 +29,9 @@ final class RequestUtility
      */
     protected array $arguments = [];
 
+    /**
+     *
+     */
     public function __construct()
     {
         $this->request = $this->getRequest();

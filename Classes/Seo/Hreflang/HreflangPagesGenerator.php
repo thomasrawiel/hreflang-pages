@@ -15,6 +15,7 @@ namespace TRAW\HreflangPages\Seo\Hreflang;
 use TRAW\HreflangPages\Utility\RelationUtility;
 use TRAW\HreflangPages\Utility\RequestUtility;
 use TRAW\HreflangPages\Utility\UrlUtility;
+use TYPO3\CMS\Core\Attribute\AsEventListener;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheGroupException;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
@@ -28,35 +29,32 @@ use TYPO3\CMS\Seo\HrefLang\HrefLangGenerator;
 /**
  * Class HreflangPagesGenerator
  */
+#[AsEventListener(
+    identifier: 'traw-hreflangpages/hreflangpagesGenerator',
+    after: 'typo3-seo/hreflangGenerator'
+)]
 final class HreflangPagesGenerator extends HrefLangGenerator
 {
-    /**
-     * @var RelationUtility|null
-     */
-    protected ?RelationUtility $relationUtility = null;
-
-    /**
-     * @var RequestUtility|null
-     */
-    protected ?RequestUtility $requestUtility = null;
-
     /**
      * HreflangPagesGenerator constructor.
      *
      * @param ContentObjectRenderer $cObj
      * @param LanguageMenuProcessor $languageMenuProcessor
      */
-    public function __construct(ContentObjectRenderer $cObj, LanguageMenuProcessor $languageMenuProcessor)
+    public function __construct(
+        ContentObjectRenderer            $cObj,
+        LanguageMenuProcessor            $languageMenuProcessor,
+        private readonly RelationUtility $relationUtility,
+        private readonly RequestUtility  $requestUtility
+    )
     {
         parent::__construct($cObj, $languageMenuProcessor);
-        $this->relationUtility = GeneralUtility::makeInstance(RelationUtility::class);
-        $this->requestUtility = GeneralUtility::makeInstance(RequestUtility::class);
     }
 
     /**
-     * @param ModifyHrefLangTagsEvent $event
+     * Adds or modifies hreflang tags for a page, taking into account related pages and query parameters.
      *
-     * @throws NoSuchCacheGroupException
+     * @param ModifyHrefLangTagsEvent $event The event containing the current hreflang state and page context.
      */
     public function __invoke(ModifyHrefLangTagsEvent $event): void
     {
@@ -64,71 +62,126 @@ final class HreflangPagesGenerator extends HrefLangGenerator
         $request = $event->getRequest();
         $pageInformation = $request->getAttribute('frontend.page.information');
         $pageRecord = $pageInformation->getPageRecord();
+        $pageId = $pageInformation->getId();
 
-        if ((int)$pageRecord['no_index'] === 1) {
+        // Skip pages with no_index
+        if ((int)($pageRecord['no_index'] ?? 0) === 1) {
             return;
         }
-        //remove the x-default, we will determine that later
+
+        // Remove x-default (will be determined later)
         unset($hrefLangs['x-default']);
 
         $languages = $this->languageMenuProcessor->process($this->cObj, [], [], []);
-        $pageId = $pageInformation->getId();
-
         $connectedPages = $this->getConnectedPagesHreflang($pageId);
+
         if (!empty($connectedPages)) {
-            foreach ($connectedPages as $relationUid => $relationHreflang) {
-                foreach ($relationHreflang as $hreflang => $url) {
-                    if (!isset($hrefLangs[$hreflang])) {
-                        $hrefLangs[$hreflang] = $url;
-                    }
-                    //don't render duplicates
-                    //$hrefLangs[$hreflang . '_' . $relationUid] = $url;
-                }
-            }
-            ksort($hrefLangs);
-        }
-        if (count($hrefLangs) > 1 && !isset($hrefLangs['x-default'])) {
-            if (array_key_exists($languages['languagemenu'][0]['hreflang'], $hrefLangs)) {
-                $hrefLangs['x-default'] = $hrefLangs[$languages['languagemenu'][0]['hreflang']];
-            }
+            $hrefLangs = $this->mergeConnectedPageHreflangs($hrefLangs, $connectedPages);
         }
 
-        //if we have query params, we must add them to the hreflang urls, because they must be self-referencing
-        if ($this->requestUtility->hasArguments()) {
-            if (!empty($this->requestUtility->getArguments()['tx_solr'])) {
-                foreach ($hrefLangs as $lang => $href) {
-                    $hrefLangs[$lang] = $href . (parse_url($href, PHP_URL_QUERY) ? '&' : '?') . $this->requestUtility->getArgumentsAsQueryString();
-                }
-            }
-        }
+        $this->addXDefaultIfApplicable($hrefLangs, $languages);
+        $this->appendQueryArgumentsIfNeeded($hrefLangs);
 
         $event->setHrefLangs($hrefLangs);
     }
 
+
     /**
-     * @param $pageUid
+     * Merges hreflang URLs from connected pages into the existing set, avoiding duplicates.
      *
-     * @return array
-     * @throws NoSuchCacheGroupException|NoSuchCacheException
+     * @param array $hrefLangs       Existing hreflang tag URLs (language code => URL).
+     * @param array $connectedPages  Connected pages' hreflang data, grouped by relation UID.
+     *                               Format: [int $relationUid => [string $hreflang => string $url]]
+     *
+     * @return array Merged and sorted hreflang URLs.
      */
-    protected function getConnectedPagesHreflang($pageUid): array
+    protected function mergeConnectedPageHreflangs(array $hrefLangs, array $connectedPages): array
+    {
+        foreach ($connectedPages as $relationHreflang) {
+            foreach ($relationHreflang as $hreflang => $url) {
+                if (!isset($hrefLangs[$hreflang])) {
+                    $hrefLangs[$hreflang] = $url;
+                }
+            }
+        }
+        ksort($hrefLangs);
+        return $hrefLangs;
+    }
+
+    /**
+     * Adds an `x-default` hreflang entry if more than one hreflang is present and a default language is known.
+     *
+     * @param array $hrefLangs Reference to the hreflang tag array to modify.
+     * @param array $languages Language menu structure from LanguageMenuProcessor.
+     */
+    protected function addXDefaultIfApplicable(array &$hrefLangs, array $languages): void
+    {
+        $firstLang = $languages['languagemenu'][0]['hreflang'] ?? null;
+        if (count($hrefLangs) > 1 && $firstLang && isset($hrefLangs[$firstLang])) {
+            $hrefLangs['x-default'] = $hrefLangs[$firstLang];
+        }
+    }
+
+    /**
+     * Appends the current request's query string to all hreflang URLs if necessary (e.g. when Solr filters are active).
+     *
+     * @param array $hrefLangs Reference to the hreflang tag array to modify.
+     */
+    protected function appendQueryArgumentsIfNeeded(array &$hrefLangs): void
+    {
+        if (!$this->requestUtility->hasArguments()) {
+            return;
+        }
+
+        $arguments = $this->requestUtility->getArguments();
+        if (empty($arguments['tx_solr'] ?? [])) {
+            return;
+        }
+
+        $queryString = $this->requestUtility->getArgumentsAsQueryString();
+        foreach ($hrefLangs as $lang => $href) {
+            $hrefLangs[$lang] = $href . (parse_url($href, PHP_URL_QUERY) ? '&' : '?') . $queryString;
+        }
+    }
+
+
+    /**
+     * Retrieves translated page URLs for all related pages across languages, suitable for hreflang output.
+     *
+     * @param int $pageUid The UID of the current page.
+     *
+     * @return array Hreflang mapping grouped by related page UID.
+     *               Format: [int $relationUid => [string $hreflang => string $url]]
+     * @throws \TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException
+     * @throws \TYPO3\CMS\Core\Cache\Exception\NoSuchCacheGroupException
+     */
+    protected function getConnectedPagesHreflang(int $pageUid): array
     {
         $relationUids = $this->relationUtility->getCachedRelations($pageUid);
         $hreflangs = [];
 
+        $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
+
         foreach ($relationUids as $relationUid) {
-            $site = GeneralUtility::makeInstance(SiteFinder::class)->getSiteByPageId($relationUid);
-            /** @var SiteLanguage $language */
+            $site = $siteFinder->getSiteByPageId($relationUid);
+
             foreach ($site->getLanguages() as $language) {
                 // @extensionScannerIgnoreLine
                 $languageId = $language->getLanguageId();
                 $translation = $this->getTranslatedPageRecord($relationUid, $languageId, $site);
+
                 if (empty($translation)) {
                     continue;
                 }
+
                 $href = UrlUtility::getAbsoluteUrl($translation['slug'], $language);
                 $hreflangs[$relationUid][$language->getHreflang()] = $href;
-                if ($languageId === 0 && !isset($hreflangs['x-default']) && $translation['tx_hreflang_pages_xdefault']) {
+
+                if (
+                    $languageId === 0 &&
+                    !isset($hreflangs['x-default']) &&
+                    ($translation['tx_hreflang_pages_xdefault'] ?? false)
+                ) {
                     $hreflangs[$relationUid]['x-default'] = $href;
                 }
             }
@@ -136,4 +189,5 @@ final class HreflangPagesGenerator extends HrefLangGenerator
 
         return $hreflangs;
     }
+
 }

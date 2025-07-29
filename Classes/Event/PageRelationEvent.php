@@ -3,18 +3,27 @@ declare(strict_types=1);
 
 namespace TRAW\HreflangPages\Event;
 
+/*
+ * This file is part of the "hreflang_pages" Extension for TYPO3 CMS.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE.txt file that was distributed with this source code.
+ *
+ * The TYPO3 project - inspiring people to share!
+ */
+
 /**
  * Class PageRelationEvent
  */
-final class PageRelationEvent
+final readonly class PageRelationEvent
 {
-    protected $source = 0;
-    protected $targets = [];
 
-    public function __construct($source, $targets)
+    /**
+     * @param $source
+     * @param $targets
+     */
+    public function __construct(private int $source, private array $targets)
     {
-        $this->source = $source;
-        $this->targets = $targets;
     }
 
     /**

@@ -6,14 +6,3 @@ services:
 
   TRAW\HreflangPages\:
     resource: '../Classes/*'
-
-  TRAW\HreflangPages\Seo\Hreflang\HreflangPagesGenerator:
-    tags:
-      - name: event.listener
-        identifier: 'traw-hreflangpages/hreflangpagesGenerator'
-        after: 'typo3-seo/hreflangGenerator'
-        event: TYPO3\CMS\Frontend\Event\ModifyHrefLangTagsEvent
-  TRAW\HreflangPages\Seo\Canonical\ModifyCanonicalUrlEventListener:
-    tags:
-      - name: event.listener
-        identifier: 'traw-hreflang-pages/modify-url-for-canonical-tag'

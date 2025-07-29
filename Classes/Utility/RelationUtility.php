@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace TRAW\HreflangPages\Utility;
@@ -16,6 +17,7 @@ use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheGroupException;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
@@ -27,29 +29,35 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 final class RelationUtility
 {
     /**
-     * @var CacheManager
+     * @var CacheManager|mixed|object|\Psr\Log\LoggerAwareInterface|\TYPO3\CMS\Core\SingletonInterface|null
      */
     protected CacheManager $cacheManager;
-
+    /**
+     * @var ConnectionPool|mixed|object|\Psr\Log\LoggerAwareInterface|\TYPO3\CMS\Core\SingletonInterface|null
+     */
     protected ConnectionPool $connectionPool;
 
-    public function __construct()
+    /**
+     * @param ConnectionPool|null $connectionPool
+     * @param CacheManager|null   $cacheManager
+     */
+    public function __construct(ConnectionPool $connectionPool = null, CacheManager $cacheManager = null)
     {
-        $this->connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
-        $this->cacheManager = GeneralUtility::makeInstance(CacheManager::class);
+        $this->connectionPool = $connectionPool ?? GeneralUtility::makeInstance(ConnectionPool::class);
+        $this->cacheManager = $cacheManager ?? GeneralUtility::makeInstance(CacheManager::class);
     }
 
     /**
-     * Get hreflang relations from cache or generate the list and cache them
+     * Get hreflang relations from cache or generate and cache them
      *
-     * @param $pageId
-     *
-     * @return array $relations
+     * @param int $pageId
+     * @return int[] Array of related page UIDs
      * @throws NoSuchCacheGroupException|NoSuchCacheException
      */
-    public function getCachedRelations($pageId): array
+    public function getCachedRelations(int $pageId): array
     {
         $relations = $this->getCacheInstance()->get($pageId);
+
         if ($relations === false) {
             $relations = $this->buildRelations($pageId);
             $this->resetRelationCache($pageId, $relations);
@@ -59,16 +67,18 @@ final class RelationUtility
     }
 
     /**
-     * @param int   $pageId
-     * @param array $relations
+     * Clears the relation cache and sets new cached values with tags.
      *
+     * @param int $pageId
+     * @param array $relations
      * @throws NoSuchCacheGroupException|NoSuchCacheException
      */
     public function resetRelationCache(int $pageId, array $relations): void
     {
-        $tags = array_map(function ($value) {
-            return 'pageId_' . $value['uid_foreign'];
-        }, $relations);
+        $tags = array_filter(array_map(static function (array $value): ?string {
+            return isset($value['uid_foreign']) ? 'pageId_' . (int)$value['uid_foreign'] : null;
+        }, $relations));
+
         if (!empty($tags)) {
             $this->cacheManager->flushCachesInGroupByTags('pages', $tags);
             $this->getCacheInstance()->set((string)$pageId, $relations, $tags, 7 * 24 * 60 * 60);
@@ -76,33 +86,39 @@ final class RelationUtility
     }
 
     /**
-     * @param int $pageUid
+     * Deletes hreflang relations for a page and flushes the corresponding cache.
      *
+     * @param int $pageUid
      * @throws NoSuchCacheGroupException|NoSuchCacheException
      */
     public function removeRelations(int $pageUid): void
     {
         $queryBuilder = $this->connectionPool->getQueryBuilderForTable('tx_hreflang_pages_page_page_mm');
+
         $relations = $this->getCachedRelations($pageUid);
 
         $affectedRows = $queryBuilder
             ->delete('tx_hreflang_pages_page_page_mm')
-            ->where($queryBuilder->expr()->or(
-                $queryBuilder->expr()->eq('uid_local', $queryBuilder->createNamedParameter($pageUid, \TYPO3\CMS\Core\Database\Connection::PARAM_INT)),
-                $queryBuilder->expr()->eq('uid_foreign', $queryBuilder->createNamedParameter($pageUid, \TYPO3\CMS\Core\Database\Connection::PARAM_INT))
-            ))
-            ->executeQuery();
-        if ((int)$affectedRows > 0) {
+            ->where(
+                $queryBuilder->expr()->or(
+                    $queryBuilder->expr()->eq('uid_local', $queryBuilder->createNamedParameter($pageUid, Connection::PARAM_INT)),
+                    $queryBuilder->expr()->eq('uid_foreign', $queryBuilder->createNamedParameter($pageUid, Connection::PARAM_INT))
+                )
+            )
+            ->executeStatement();
+
+        if ($affectedRows > 0) {
             $this->flushRelationCacheForPage($pageUid);
-            foreach ($relations as $relationUid) {
-                $this->flushRelationCacheForPage($relationUid);
+            foreach ($relations as $relatedUid) {
+                $this->flushRelationCacheForPage($relatedUid);
             }
         }
     }
 
     /**
-     * @param int $pageUid
+     * Flushes the cache for a single page by its UID.
      *
+     * @param int $pageUid
      * @throws NoSuchCacheGroupException
      */
     public function flushRelationCacheForPage(int $pageUid): void
@@ -111,71 +127,95 @@ final class RelationUtility
     }
 
     /**
-     * Get hreflang relations recursively
+     * Builds a full list of hreflang relations, including indirect ones.
      *
      * @param int $pageId
-     *
-     * @return array
+     * @return array Array of MM relation rows
      */
     public function buildRelations(int $pageId): array
     {
-        /** @var QueryBuilder $queryBuilder */
-        $queryBuilder = $this->connectionPool
-            ->getQueryBuilderForTable('pages');
-        $queryBuilder->getRestrictions()->removeAll()
-            ->add(GeneralUtility::makeInstance(DeletedRestriction::class));
-        $relations = $queryBuilder
-            ->select('mm.*')
-            ->from('tx_hreflang_pages_page_page_mm', 'mm')
-            ->leftJoin('mm', 'pages', 'p', 'mm.uid_foreign = p.uid')->where($queryBuilder->expr()->or(
-                $queryBuilder->expr()->eq('mm.uid_local', $pageId),
-                $queryBuilder->expr()->eq('mm.uid_foreign', $pageId)
-            ))->executeQuery()
-            ->fetchAllAssociative();
+        $relations = $this->fetchRelationsForPage($pageId);
+
+        $indirectRelations = [];
 
         foreach ($relations as $relation) {
-            $queryBuilder2 = $this->connectionPool
-                ->getQueryBuilderForTable('pages');
-            $queryBuilder2->getRestrictions()->removeAll()
-                ->add(GeneralUtility::makeInstance(DeletedRestriction::class));
-            $indirectRelations = $queryBuilder2
-                ->select('mm.*')
-                ->from('tx_hreflang_pages_page_page_mm', 'mm')
-                ->leftJoin('mm', 'pages', 'p', 'mm.uid_foreign = p.uid')
-                ->where($queryBuilder2->expr()->and(
-                    $queryBuilder2->expr()->eq('mm.uid_local', (int)$relation['uid_local']),
-                    $queryBuilder2->expr()->neq('mm.uid_foreign', (int)$pageId)
-                ))
-                ->executeQuery()
-                ->fetchAllAssociative();
-            $relations = array_merge($relations, $indirectRelations);
+            $uidLocal = (int)($relation['uid_local'] ?? 0);
+
+            // Avoid looping if uid_local is invalid or same as pageId
+            if ($uidLocal > 0 && $uidLocal !== $pageId) {
+                $indirect = $this->fetchRelationsForPage($uidLocal, $pageId);
+                $indirectRelations = array_merge($indirectRelations, $indirect);
+            }
         }
 
-        //eliminate duplicates
-        return array_map('unserialize', array_unique(array_map('serialize', $relations)));
+        $allRelations = array_merge($relations, $indirectRelations);
+
+        // Deduplicate by serialized content
+        return array_map('unserialize', array_unique(array_map('serialize', $allRelations)));
     }
 
     /**
-     * Merge uid_local and uid_forein from all relations into an array
-     * and return the unique uid array, excluding the current page uid
+     * Retrieves relation records from the MM table for a given page.
      *
-     * @param array $relations
-     * @param int   $pageId
+     * @param int $pageId
+     * @param int|null $excludePageId If set, excludes relations pointing to this ID.
+     * @return array Array of MM relation rows
+     */
+    private function fetchRelationsForPage(int $pageId, ?int $excludePageId = null): array
+    {
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable('pages');
+        $queryBuilder->getRestrictions()
+            ->removeAll()
+            ->add(GeneralUtility::makeInstance(DeletedRestriction::class));
+
+        $expr = $queryBuilder->expr();
+        $conditions = [
+            $expr->or(
+                $expr->eq('mm.uid_local', $queryBuilder->createNamedParameter($pageId, Connection::PARAM_INT)),
+                $expr->eq('mm.uid_foreign', $queryBuilder->createNamedParameter($pageId, Connection::PARAM_INT))
+            )
+        ];
+
+        if ($excludePageId !== null) {
+            $conditions[] = $expr->neq('mm.uid_foreign', $queryBuilder->createNamedParameter($excludePageId, Connection::PARAM_INT));
+        }
+
+        return $queryBuilder
+            ->select('mm.*')
+            ->from('tx_hreflang_pages_page_page_mm', 'mm')
+            ->leftJoin('mm', 'pages', 'p', 'mm.uid_foreign = p.uid')
+            ->where(...$conditions)
+            ->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * Merges all UIDs from relations and excludes the source page UID.
      *
-     * @return array
+     * @param array $relations MM table relation rows.
+     * @param int $pageId The original page UID to exclude.
+     * @return int[] Array of unique related page UIDs
      */
     protected function getAllRelationUids(array $relations, int $pageId): array
     {
-        $uidArray = [];
+        $uids = [];
+
         foreach ($relations as $relation) {
-            array_push($uidArray, (int)$relation['uid_local'], (int)$relation['uid_foreign']);
+            if (isset($relation['uid_local'])) {
+                $uids[] = (int)$relation['uid_local'];
+            }
+            if (isset($relation['uid_foreign'])) {
+                $uids[] = (int)$relation['uid_foreign'];
+            }
         }
-        return array_diff(array_unique($uidArray), [$pageId]);
+
+        return array_values(array_diff(array_unique($uids), [$pageId]));
     }
 
     /**
-     * @param string $cacheIdentifier
+     * Retrieves the cache instance for hreflang page relations.
      *
+     * @param string $cacheIdentifier
      * @return FrontendInterface
      * @throws NoSuchCacheException
      */

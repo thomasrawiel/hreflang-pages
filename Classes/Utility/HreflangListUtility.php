@@ -13,6 +13,7 @@ namespace TRAW\HreflangPages\Utility;
  */
 
 use stdClass;
+use TRAW\HreflangPages\Domain\DTO\Message;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
@@ -53,11 +54,11 @@ final class HreflangListUtility
      *
      * @param array $data
      */
-    public function __construct(array $data)
+    public function __construct(array $contextData)
     {
-        $this->databaseRow = $data['databaseRow'];
-        $this->site = $data['site'];
-        $this->pageLanguageOverlayRows = $data['pageLanguageOverlayRows'];
+        $this->databaseRow = $contextData['databaseRow'];
+        $this->site = $contextData['site'];
+        $this->pageLanguageOverlayRows = $contextData['pageLanguageOverlayRows'];
     }
 
     /**
@@ -79,18 +80,6 @@ final class HreflangListUtility
         }
 
         return $this->generateHtml($content ?? '');
-    }
-
-    /**
-     * @param int $pageId
-     * @param int $languageId
-     *
-     * @return array
-     * @throws SiteNotFoundException
-     */
-    protected function getTranslatedPageRecord(int $pageId, int $languageId): array
-    {
-        return PageUtility::getPageTranslationRecord($pageId, $languageId) ?? [];
     }
 
     /**
@@ -121,7 +110,6 @@ final class HreflangListUtility
                         if (!isset($hrefLangs[$hreflang])) {
                             $hrefLangs[$hreflang] = $url;
                         } else {
-                            //$hrefLangs[$hreflang . '_' . $relationUid] = $url;
                             $this->addMsg('warning-same-language', 'warning', [0 => $hreflang . '_' . $relationUid]);
                         }
                     }
@@ -149,8 +137,8 @@ final class HreflangListUtility
         if (!empty($this->messages)) {
             $content .= "<strong>Note:</strong><ul class='warnings'>";
             foreach ($this->messages as $message) {
-                $content .= "<li class='" . $message->messageType . "'>"
-                    . $message->text
+                $content .= "<li class='" . $message->getType() . "'>"
+                    . $message->getText()
                     . '</li>';
             }
             $content .= '</ul>';
@@ -172,11 +160,13 @@ final class HreflangListUtility
             ? $relationUtility->getCachedRelations($this->databaseRow['uid'])
             : [];
 
+        $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
+
         foreach ($relationUids as $relationUid) {
             if ($relationUid === $this->databaseRow['uid']) {
                 continue;
             }
-            $site = GeneralUtility::makeInstance(SiteFinder::class)->getSiteByPageId($relationUid);
+            $site = $siteFinder->getSiteByPageId($relationUid);
             /** @var SiteLanguage $language */
             foreach ($site->getLanguages() as $language) {
                 // @extensionScannerIgnoreLine
@@ -199,22 +189,6 @@ final class HreflangListUtility
             }
         }
         return $hreflangs;
-    }
-
-    /**
-     * @param string $text
-     * @param string $type
-     * @param array  $additionalData
-     */
-    protected function addMsg(string $text, string $type = 'info', $additionalData = []): void
-    {
-        $message = new stdClass();
-        $message->messageType = $type;
-
-        $messageText = LocalizationUtility::translate(self::lll . $text, null, $additionalData);
-        $message->text = $messageText ?? $text;
-
-        $this->messages[] = $message;
     }
 
     /**
@@ -253,6 +227,18 @@ final class HreflangListUtility
     }
 
     /**
+     * @param int $pageId
+     * @param int $languageId
+     *
+     * @return array
+     * @throws SiteNotFoundException
+     */
+    protected function getTranslatedPageRecord(int $pageId, int $languageId): array
+    {
+        return PageUtility::getPageTranslationRecord($pageId, $languageId) ?? [];
+    }
+
+    /**
      * @param $languageId
      *
      * @return array|null
@@ -277,28 +263,37 @@ final class HreflangListUtility
      */
     protected function getPageTranslationLanguages(): array
     {
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-            ->getQueryBuilderForTable('pages');
+        /** @var QueryBuilder $queryBuilder */
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
         $result = $queryBuilder->select('sys_language_uid')
-            ->from('pages')
-            ->where(
-                $queryBuilder->expr()->and(
-                    $queryBuilder->expr()->or(
-                        $queryBuilder->expr()->eq('uid', $this->databaseRow['uid']),
-                        $queryBuilder->expr()->eq('l10n_parent', $this->databaseRow['uid'])
-                    ),
-                    $queryBuilder->expr()->eq('hidden', 0),
-                    $queryBuilder->expr()->eq('deleted', 0)
-                )
-            )->executeQuery()
+            ->from('pages')->where($queryBuilder->expr()->and(
+                $queryBuilder->expr()->or(
+                    $queryBuilder->expr()->eq('uid', $this->databaseRow['uid']),
+                    $queryBuilder->expr()->eq('l10n_parent', $this->databaseRow['uid'])
+                ),
+                $queryBuilder->expr()->eq('hidden', 0),
+                $queryBuilder->expr()->eq('deleted', 0)
+            ))->executeQuery()
             ->fetchAllAssociative();
 
         $translations = [];
         foreach ($result as $translation) {
-            array_push($translations, $translation['sys_language_uid']);
+            $translations[] = $translation['sys_language_uid'];
         }
 
         return $translations;
+    }
+
+    /**
+     * @param string $text
+     * @param string $type
+     * @param array  $additionalData
+     */
+    protected function addMsg(string $text, string $type = 'info', $additionalData = []): void
+    {
+        $messageText = LocalizationUtility::translate(self::lll . $text, null, $additionalData);
+        $message = new Message($type, $messageText ?? $text);
+        $this->messages[] = $message;
     }
 
     /**

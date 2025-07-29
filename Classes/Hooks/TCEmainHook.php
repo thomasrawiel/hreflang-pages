@@ -67,7 +67,8 @@ final class TCEmainHook
     {
         if (isset($pObj->datamap['pages'])) {
             foreach ($pObj->datamap['pages'] as $uid => $page) {
-                if ((int)$uid > 0) {
+                $uid = (int)$uid;
+                if ($uid > 0) {
                     $relations = $this->relationUtility->getCachedRelations($uid);
                     $relations[] = $uid;
                     foreach ($relations as $relationUid) {

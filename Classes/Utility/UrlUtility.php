@@ -15,28 +15,44 @@ namespace TRAW\HreflangPages\Utility;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 
+
 /**
  * Class UrlUtility
  */
 final class UrlUtility
 {
+
     /**
-     * @param string       $url
-     * @param SiteLanguage $siteLanguage
+     * Converts a relative URL into an absolute URL using the site's base URL.
+     * If already absolute, it returns the original URL.
      *
-     * @return string
+     * @param string       $url          Relative or absolute URL
+     * @param SiteLanguage $siteLanguage The language context providing the base URL
+     *
+     * @return string Fully qualified absolute URL
      */
     public static function getAbsoluteUrl(string $url, SiteLanguage $siteLanguage): string
     {
         $uri = new Uri($url);
-        if (empty($uri->getHost())) {
-            $url = $siteLanguage->getBase()->withPath(str_replace('//', '/', $siteLanguage->getBase()->getPath() . $uri->getPath()));
 
-            if ($uri->getQuery()) {
-                $url = $url->withQuery($uri->getQuery());
-            }
+        if ($uri->getHost()) {
+            // Already absolute
+            return (string)$uri;
         }
 
-        return (string)$url;
+        $baseUri = $siteLanguage->getBase();
+
+        // Normalize path (ensure no double slashes)
+        $basePath = rtrim($baseUri->getPath(), '/');
+        $urlPath = ltrim($uri->getPath(), '/');
+        $combinedPath = $basePath . '/' . $urlPath;
+
+        $absoluteUri = $baseUri->withPath($combinedPath);
+
+        if ($uri->getQuery()) {
+            $absoluteUri = $absoluteUri->withQuery($uri->getQuery());
+        }
+
+        return (string)$absoluteUri;
     }
 }

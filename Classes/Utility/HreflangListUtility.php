@@ -166,25 +166,32 @@ final class HreflangListUtility
             if ($relationUid === $this->databaseRow['uid']) {
                 continue;
             }
-            $site = $siteFinder->getSiteByPageId($relationUid);
-            /** @var SiteLanguage $language */
-            foreach ($site->getLanguages() as $language) {
-                // @extensionScannerIgnoreLine
-                $languageId = $language->getLanguageId();
-                $translation = $this->getTranslatedPageRecord($relationUid, $languageId);
-                if (empty($translation)) {
-                    continue;
-                }
-
-                $href = UrlUtility::getAbsoluteUrl($translation['slug'], $language);
-                $hreflangs[$relationUid][$language->getHreflang()] = $href;
-
-                if ($languageId === 0 && !isset($hreflangs[$relationUid]['x-default']) && $translation['tx_hreflang_pages_xdefault']) {
-                    $hreflangs[$relationUid]['x-default'] = $href;
-
-                    if ($this->databaseRow['tx_hreflang_pages_xdefault']) {
-                        $this->addMsg('x-default-conflict', 'warning', [0 => $translation['uid']]);
+            try {
+                $site = $siteFinder->getSiteByPageId($relationUid);
+                /** @var SiteLanguage $language */
+                foreach ($site->getLanguages() as $language) {
+                    // @extensionScannerIgnoreLine
+                    $languageId = $language->getLanguageId();
+                    $translation = $this->getTranslatedPageRecord($relationUid, $languageId);
+                    if (empty($translation)) {
+                        continue;
                     }
+
+                    $href = UrlUtility::getAbsoluteUrl($translation['slug'], $language);
+                    $hreflangs[$relationUid][$language->getHreflang()] = $href;
+
+                    if ($languageId === 0 && !isset($hreflangs[$relationUid]['x-default']) && $translation['tx_hreflang_pages_xdefault']) {
+                        $hreflangs[$relationUid]['x-default'] = $href;
+
+                        if ($this->databaseRow['tx_hreflang_pages_xdefault']) {
+                            $this->addMsg('x-default-conflict', 'warning', [0 => $translation['uid']]);
+                        }
+                    }
+                }
+            } catch (\Exception $exception) {
+                if ($exception instanceof SiteNotFoundException) {
+                    $relationUtility->removeRelationsForNonExistentPage($relationUid);
+                    $relationUtility->resetRelationCache($this->databaseRow['uid'], $relationUid);
                 }
             }
         }

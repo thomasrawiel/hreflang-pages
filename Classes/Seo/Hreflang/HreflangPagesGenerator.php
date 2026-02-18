@@ -18,6 +18,7 @@ use TRAW\HreflangPages\Utility\UrlUtility;
 use TYPO3\CMS\Core\Attribute\AsEventListener;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheGroupException;
+use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -163,27 +164,33 @@ final class HreflangPagesGenerator extends HrefLangGenerator
         $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
 
         foreach ($relationUids as $relationUid) {
-            $site = $siteFinder->getSiteByPageId($relationUid);
+            try {
+                $site = $siteFinder->getSiteByPageId($relationUid);
 
-            foreach ($site->getLanguages() as $language) {
-                // @extensionScannerIgnoreLine
-                $languageId = $language->getLanguageId();
-                $translation = $this->getTranslatedPageRecord($relationUid, $languageId, $site);
+                foreach ($site->getLanguages() as $language) {
+                    // @extensionScannerIgnoreLine
+                    $languageId = $language->getLanguageId();
+                    $translation = $this->getTranslatedPageRecord($relationUid, $languageId, $site);
 
-                if (empty($translation)) {
-                    continue;
+                    if (empty($translation)) {
+                        continue;
+                    }
+
+                    $href = UrlUtility::getAbsoluteUrl($translation['slug'], $language);
+                    $hreflangs[$relationUid][$language->getHreflang()] = $href;
+
+                    if (
+                        $languageId === 0 &&
+                        !isset($hreflangs['x-default']) &&
+                        ($translation['tx_hreflang_pages_xdefault'] ?? false)
+                    ) {
+                        $hreflangs[$relationUid]['x-default'] = $href;
+                    }
                 }
-
-                $href = UrlUtility::getAbsoluteUrl($translation['slug'], $language);
-                $hreflangs[$relationUid][$language->getHreflang()] = $href;
-
-                if (
-                    $languageId === 0 &&
-                    !isset($hreflangs['x-default']) &&
-                    ($translation['tx_hreflang_pages_xdefault'] ?? false)
-                ) {
-                    $hreflangs[$relationUid]['x-default'] = $href;
-                }
+            } catch (SiteNotFoundException $exception) {
+                $this->relationUtility->removeRelationsForNonExistentPage($relationUid);
+                $this->relationUtility->resetRelationCache($pageUid, $relationUid);
+                continue;
             }
         }
 

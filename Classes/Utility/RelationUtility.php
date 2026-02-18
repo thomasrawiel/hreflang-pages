@@ -51,6 +51,7 @@ final class RelationUtility
      * Get hreflang relations from cache or generate and cache them
      *
      * @param int $pageId
+     *
      * @return int[] Array of related page UIDs
      * @throws NoSuchCacheGroupException|NoSuchCacheException
      */
@@ -69,19 +70,22 @@ final class RelationUtility
     /**
      * Clears the relation cache and sets new cached values with tags.
      *
-     * @param int $pageId
-     * @param array $relations
+     * @param int   $pageId (uid_local)
+     * @param array|int $relations - relations array with uid_local and uid_foreign as keys OR relation page uid
+     *
      * @throws NoSuchCacheGroupException|NoSuchCacheException
      */
-    public function resetRelationCache(int $pageId, array $relations): void
+    public function resetRelationCache(int $pageId, array|int $relations): void
     {
+        $relationIds = is_array($relations) ? $relations : [['uid_foreign' => $relations]];
+
         $tags = array_filter(array_map(static function (array $value): ?string {
             return isset($value['uid_foreign']) ? 'pageId_' . (int)$value['uid_foreign'] : null;
-        }, $relations));
+        }, $relationIds));
 
         if (!empty($tags)) {
             $this->cacheManager->flushCachesInGroupByTags('pages', $tags);
-            $this->getCacheInstance()->set((string)$pageId, $relations, $tags, 7 * 24 * 60 * 60);
+            $this->getCacheInstance()->set((string)$pageId, $relationIds, $tags, 7 * 24 * 60 * 60);
         }
     }
 
@@ -89,6 +93,7 @@ final class RelationUtility
      * Deletes hreflang relations for a page and flushes the corresponding cache.
      *
      * @param int $pageUid
+     *
      * @throws NoSuchCacheGroupException|NoSuchCacheException
      */
     public function removeRelations(int $pageUid): void
@@ -119,6 +124,7 @@ final class RelationUtility
      * Flushes the cache for a single page by its UID.
      *
      * @param int $pageUid
+     *
      * @throws NoSuchCacheGroupException
      */
     public function flushRelationCacheForPage(int $pageUid): void
@@ -130,6 +136,7 @@ final class RelationUtility
      * Builds a full list of hreflang relations, including indirect ones.
      *
      * @param int $pageId
+     *
      * @return array Array of MM relation rows
      */
     public function buildRelations(int $pageId): array
@@ -157,8 +164,9 @@ final class RelationUtility
     /**
      * Retrieves relation records from the MM table for a given page.
      *
-     * @param int $pageId
+     * @param int      $pageId
      * @param int|null $excludePageId If set, excludes relations pointing to this ID.
+     *
      * @return array Array of MM relation rows
      */
     private function fetchRelationsForPage(int $pageId, ?int $excludePageId = null): array
@@ -173,7 +181,7 @@ final class RelationUtility
             $expr->or(
                 $expr->eq('mm.uid_local', $queryBuilder->createNamedParameter($pageId, Connection::PARAM_INT)),
                 $expr->eq('mm.uid_foreign', $queryBuilder->createNamedParameter($pageId, Connection::PARAM_INT))
-            )
+            ),
         ];
 
         if ($excludePageId !== null) {
@@ -193,7 +201,8 @@ final class RelationUtility
      * Merges all UIDs from relations and excludes the source page UID.
      *
      * @param array $relations MM table relation rows.
-     * @param int $pageId The original page UID to exclude.
+     * @param int   $pageId    The original page UID to exclude.
+     *
      * @return int[] Array of unique related page UIDs
      */
     protected function getAllRelationUids(array $relations, int $pageId): array
@@ -216,11 +225,36 @@ final class RelationUtility
      * Retrieves the cache instance for hreflang page relations.
      *
      * @param string $cacheIdentifier
+     *
      * @return FrontendInterface
      * @throws NoSuchCacheException
      */
     protected function getCacheInstance(string $cacheIdentifier = 'tx_hreflang_pages_cache'): FrontendInterface
     {
         return $this->cacheManager->getCache($cacheIdentifier);
+    }
+
+    /**
+     * When we detect a page, that triggers a SiteNotFoundException, we remove every relation to this uid
+     *
+     * @param $relationUid
+     *
+     * @return void
+     */
+    public function removeRelationsForNonExistentPage(int $relationUid)
+    {
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getQueryBuilderForTable('tx_hreflang_pages_page_page_mm');
+
+        $affectedRows = $queryBuilder->delete('tx_hreflang_pages_page_page_mm')
+            ->where(
+                $queryBuilder->expr()->or(
+                    $queryBuilder->expr()->eq('uid_local', $queryBuilder->createNamedParameter($relationUid, \TYPO3\CMS\Core\Database\Connection::PARAM_INT)),
+                    $queryBuilder->expr()->eq('uid_foreign', $relationUid),
+                )
+            )->executeStatement();
+        if ($affectedRows > 0) {
+            $this->flushRelationCacheForPage($relationUid);
+        }
     }
 }

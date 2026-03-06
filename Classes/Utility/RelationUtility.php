@@ -41,7 +41,7 @@ final class RelationUtility
      * @param ConnectionPool|null $connectionPool
      * @param CacheManager|null   $cacheManager
      */
-    public function __construct(ConnectionPool $connectionPool = null, CacheManager $cacheManager = null)
+    public function __construct(?ConnectionPool $connectionPool = null, ?CacheManager $cacheManager = null)
     {
         $this->connectionPool = $connectionPool ?? GeneralUtility::makeInstance(ConnectionPool::class);
         $this->cacheManager = $cacheManager ?? GeneralUtility::makeInstance(CacheManager::class);

@@ -21,8 +21,8 @@
   },
   "require": {
     "php": "^8.2",
-    "typo3/cms-core": "^13",
-    "typo3/cms-seo": "^13"
+    "typo3/cms-core": "^13 || ^14",
+    "typo3/cms-seo": "^13 || ^14"
   },
   "extra": {
     "typo3/cms": {

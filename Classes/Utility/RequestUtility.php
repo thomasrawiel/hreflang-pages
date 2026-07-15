@@ -68,9 +68,16 @@ final class RequestUtility
     /**
      * @return string
      */
-    public function getArgumentsAsQueryString(): string
+    public function getArgumentsAsQueryString(?string $argument = null): string
     {
-        return http_build_query($this->arguments);
+        if ($argument === null) {
+            return http_build_query($this->arguments);
+        }
+
+        if (array_key_exists($argument, $this->arguments)) {
+            return http_build_query([$argument => $this->arguments[$argument]]);
+        }
+        return '';
     }
 
     /**

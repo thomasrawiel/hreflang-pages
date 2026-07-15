@@ -40,8 +40,22 @@ final class ModifyCanonicalUrlEventListener
      */
     public function __invoke(ModifyUrlForCanonicalTagEvent $event): void
     {
-        //set the canonical url to contain all request parameters
-        //@extensionScannerIgnoreLine
-        $event->setUrl($this->requestUtility->getRequestUri());
+        if (!$this->requestUtility->hasArguments()) {
+            return;
+        }
+
+        $arguments = $this->requestUtility->getArguments();
+        if (empty($arguments['tx_solr'] ?? [])) {
+            return;
+        }
+
+        $url = $event->getUrl();
+
+        if($url === '') {
+            return;
+        }
+        $queryString = $this->requestUtility->getArgumentsAsQueryString('tx_solr');
+        $url = $url . (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . $queryString;
+        $event->setUrl($url);
     }
 }

@@ -1,6 +1,6 @@
 {
   "name": "traw/hreflang-pages",
-  "description": "Extends TYPO3 EXT:seo hreflang functionality",
+  "description": "Hreflang Pages - Extends TYPO3 EXT:seo hreflang functionality",
   "type": "typo3-cms-extension",
   "keywords": [
     "TYPO3 CMS",
@@ -20,13 +20,17 @@
     }
   },
   "require": {
-    "php": "^8.2",
-    "typo3/cms-core": "^13 || ^14",
-    "typo3/cms-seo": "^13 || ^14"
+    "php": "^8.4",
+    "typo3/cms-core": "^14",
+    "typo3/cms-seo": "^14"
   },
   "extra": {
     "typo3/cms": {
-      "extension-key": "hreflang_pages"
+      "extension-key": "hreflang_pages",
+      "version": "3.1.0-stable",
+      "Package": {
+        "providesPackages": {}
+      }
     }
   }
 }

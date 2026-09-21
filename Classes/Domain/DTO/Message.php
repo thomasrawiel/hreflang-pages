@@ -17,10 +17,6 @@ namespace TRAW\HreflangPages\Domain\DTO;
  */
 final readonly class Message
 {
-    /**
-     * @param string $type
-     * @param string $text
-     */
     public function __construct(
         private string $type,
         private string $text
@@ -28,17 +24,11 @@ final readonly class Message
     {
     }
 
-    /**
-     * @return string
-     */
     public function getType(): string
     {
         return $this->type;
     }
 
-    /**
-     * @return string
-     */
     public function getText(): string
     {
         return $this->text;

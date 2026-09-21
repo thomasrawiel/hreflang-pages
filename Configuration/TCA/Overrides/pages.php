@@ -1,9 +1,13 @@
 <?php
 
-defined('TYPO3') or die('Access denied.');
-call_user_func(function ($_EXTKEY = 'hreflang_pages', $table = 'pages') {
-    $LLL = 'LLL:EXT:hreflang_pages/Resources/Private/Language/locallang_tca.xlf:';
-    \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTCAcolumns($table, [
+declare(strict_types=1);
+
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
+
+defined('TYPO3') || die('Access denied.');
+call_user_func(function ($_EXTKEY = 'hreflang_pages', string $table = 'pages'): void {
+    $LLL = 'hreflang_pages.tca:';
+    ExtensionManagementUtility::addTCAcolumns($table, [
         'tx_hreflang_pages_hreflanglist' => [
             'exclude' => true,
             'displayCond' => [
@@ -102,7 +106,7 @@ call_user_func(function ($_EXTKEY = 'hreflang_pages', $table = 'pages') {
         'showitem' => 'tx_hreflang_pages_hreflanglist',
     ];
 
-    \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addToAllTCAtypes(
+    ExtensionManagementUtility::addToAllTCAtypes(
         'pages',
         '--div--;' . $LLL . 'div.hreflang,
         --palette--;;hreflang_connections,

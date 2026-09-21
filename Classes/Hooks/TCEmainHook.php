@@ -12,46 +12,26 @@ namespace TRAW\HreflangPages\Hooks;
  * The TYPO3 project - inspiring people to share!
  */
 
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use TRAW\HreflangPages\Event\PageRelationEvent;
 use TRAW\HreflangPages\Utility\RelationUtility;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheGroupException;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\EventDispatcher\EventDispatcher;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-/**
- * Class TCEmainHook
- */
-final class TCEmainHook
+#[Autoconfigure(public:true)]
+final readonly class TCEmainHook
 {
-    /**
-     * @var RelationUtility
-     */
-    protected $relationUtility;
-
-    /**
-     * @var mixed|object|\Psr\Log\LoggerAwareInterface|\TYPO3\CMS\Core\SingletonInterface|null
-     */
-    protected $eventDispatcher;
-
-    public function __construct()
+    public function __construct(private RelationUtility $relationUtility, private EventDispatcher $eventDispatcher)
     {
-        $this->relationUtility = GeneralUtility::makeInstance(RelationUtility::class);
-        $this->eventDispatcher = GeneralUtility::makeInstance(EventDispatcher::class);
     }
 
     /**
-     * @param             $table
-     * @param             $id
-     * @param             $recordToDelete
-     * @param null        $recordWasDeleted
-     * @param DataHandler $pObj
-     *
-     * @throws NoSuchCacheGroupException
      * @throws NoSuchCacheException
+     * @throws NoSuchCacheGroupException
      */
-    public function processCmdmap_deleteAction($table, $id, $recordToDelete, &$recordWasDeleted, DataHandler &$pObj): void
+    public function processCmdmap_deleteAction($table, $id, array $recordToDelete, &$recordWasDeleted, DataHandler &$pObj): void
     {
         if ($table === 'pages') {
             $this->relationUtility->removeRelations($recordToDelete['uid']);
@@ -59,8 +39,6 @@ final class TCEmainHook
     }
 
     /**
-     * @param DataHandler $pObj
-     *
      * @throws NoSuchCacheGroupException
      */
     public function processDatamap_afterAllOperations(DataHandler &$pObj): void

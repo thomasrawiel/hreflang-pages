@@ -24,20 +24,14 @@ use TYPO3\CMS\Core\Attribute\AsEventListener;
 #[AsEventListener(
     identifier: 'traw-hreflang-pages/modify-url-for-canonical-tag',
 )]
-final class ModifyCanonicalUrlEventListener
+final readonly class ModifyCanonicalUrlEventListener
 {
-    /**
-     * @param RequestUtility $requestUtility
-     */
     public function __construct(
-        private readonly RequestUtility $requestUtility
+        private RequestUtility $requestUtility
     )
     {
     }
 
-    /**
-     * @param ModifyUrlForCanonicalTagEvent $event
-     */
     public function __invoke(ModifyUrlForCanonicalTagEvent $event): void
     {
         //set the canonical url to contain all request parameters

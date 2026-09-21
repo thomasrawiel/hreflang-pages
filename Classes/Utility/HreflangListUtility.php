@@ -30,30 +30,16 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
  */
 final class HreflangListUtility
 {
-    protected const lll = 'LLL:EXT:hreflang_pages/Resources/Private/Language/locallang_tca.xlf:';
-    /**
-     * @var array
-     */
-    protected $databaseRow;
-    /**
-     * @var array
-     */
-    protected $pageLanguageOverlayRows;
-    /**
-     * @var Site|null
-     */
-    protected Site|NullSite|null $site = null;
+    protected const string lll = 'hreflang_pages.tca:';
 
-    /**
-     * @var array
-     */
-    protected $messages = [];
+    protected array $databaseRow;
 
-    /**
-     * HreflangListUtility constructor.
-     *
-     * @param array $data
-     */
+    protected array $pageLanguageOverlayRows;
+
+    protected Site|NullSite|null $site;
+
+    protected array $messages = [];
+
     public function __construct(array $contextData)
     {
         $this->databaseRow = $contextData['databaseRow'];
@@ -61,9 +47,6 @@ final class HreflangListUtility
         $this->pageLanguageOverlayRows = $contextData['pageLanguageOverlayRows'];
     }
 
-    /**
-     * @return string
-     */
     public function generateHrefLangList(): string
     {
         if ($this->databaseRow['no_index'] === 1) {
@@ -82,9 +65,6 @@ final class HreflangListUtility
         return $this->generateHtml($content ?? '');
     }
 
-    /**
-     * @return string
-     */
     protected function getHreflangPreview(): string
     {
         $content = "<strong class='headline'>" . LocalizationUtility::translate(self::lll . 'hreflang.headline') . '</strong>';
@@ -104,14 +84,12 @@ final class HreflangListUtility
             }
 
             $connectedHreflangs = $this->getConnectedHreflangs();
-            if (!empty($connectedHreflangs)) {
-                foreach ($connectedHreflangs as $relationUid => $relationHreflang) {
-                    foreach ($relationHreflang as $hreflang => $url) {
-                        if (!isset($hrefLangs[$hreflang])) {
-                            $hrefLangs[$hreflang] = $url;
-                        } else {
-                            $this->addMsg('warning-same-language', 'warning', [0 => $hreflang . '_' . $relationUid]);
-                        }
+            foreach ($connectedHreflangs as $relationUid => $relationHreflang) {
+                foreach ($relationHreflang as $hreflang => $url) {
+                    if (!isset($hrefLangs[$hreflang])) {
+                        $hrefLangs[$hreflang] = $url;
+                    } else {
+                        $this->addMsg('warning-same-language', 'warning', [0 => $hreflang . '_' . $relationUid]);
                     }
                 }
             }
@@ -119,6 +97,7 @@ final class HreflangListUtility
             if (count($hrefLangs) > 1 && !isset($hrefLangs['x-default'])) {
                 $hrefLangs['x-default'] = $hrefLangs[$this->site->getDefaultLanguage()->getHreflang()];
             }
+
             ksort($hrefLangs);
         } else {
             $this->addMsg('canonical-no-preview');
@@ -129,27 +108,26 @@ final class HreflangListUtility
             foreach ($hrefLangs as $hreflang => $url) {
                 $content .= "<li><strong>$hreflang</strong> ($url)</li>";
             }
+
             $content .= '</ul>';
         } else {
             $this->addMsg('translation-missing-no-preview');
         }
 
-        if (!empty($this->messages)) {
+        if ($this->messages !== []) {
             $content .= "<strong>Note:</strong><ul class='warnings'>";
             foreach ($this->messages as $message) {
                 $content .= "<li class='" . $message->getType() . "'>"
                     . $message->getText()
                     . '</li>';
             }
+
             $content .= '</ul>';
         }
 
         return $content;
     }
 
-    /**
-     * @return array
-     */
     protected function getConnectedHreflangs(): array
     {
         $hreflangs = [];
@@ -166,6 +144,7 @@ final class HreflangListUtility
             if ($relationUid === $this->databaseRow['uid']) {
                 continue;
             }
+
             try {
                 $site = $siteFinder->getSiteByPageId($relationUid);
                 /** @var SiteLanguage $language */
@@ -173,7 +152,7 @@ final class HreflangListUtility
                     // @extensionScannerIgnoreLine
                     $languageId = $language->getLanguageId();
                     $translation = $this->getTranslatedPageRecord($relationUid, $languageId);
-                    if (empty($translation)) {
+                    if ($translation === []) {
                         continue;
                     }
 
@@ -195,12 +174,10 @@ final class HreflangListUtility
                 }
             }
         }
+
         return $hreflangs;
     }
 
-    /**
-     * @return string
-     */
     protected function getLanguagePreview(): string
     {
         $content = "<strong class='headline'>" . LocalizationUtility::translate(self::lll . 'languages.headline') . '</strong>'
@@ -214,7 +191,7 @@ final class HreflangListUtility
 
             // @extensionScannerIgnoreLine
             $languageId = $language->getLanguageId();
-            $isAvailable = call_user_func(function ($languageId) {
+            $isAvailable = call_user_func(function ($languageId): bool {
                 return $languageId > 0 && !is_null($this->getPageTranslatedInLanguage($languageId));
                 // @extensionScannerIgnoreLine
             }, $languageId) ? 'YES' : ($language === $this->site->getDefaultLanguage() ? 'is default' : 'NO');
@@ -234,10 +211,7 @@ final class HreflangListUtility
     }
 
     /**
-     * @param int $pageId
-     * @param int $languageId
      *
-     * @return array
      * @throws SiteNotFoundException
      */
     protected function getTranslatedPageRecord(int $pageId, int $languageId): array
@@ -247,12 +221,10 @@ final class HreflangListUtility
 
     /**
      * @param $languageId
-     *
-     * @return array|null
      */
     protected function getPageTranslatedInLanguage($languageId): ?array
     {
-        if (empty($this->pageLanguageOverlayRows)) {
+        if ($this->pageLanguageOverlayRows === []) {
             return null;
         }
 
@@ -262,12 +234,10 @@ final class HreflangListUtility
                 return $overlay;
             }
         }
+
         return null;
     }
 
-    /**
-     * @return array
-     */
     protected function getPageTranslationLanguages(): array
     {
         /** @var QueryBuilder $queryBuilder */
@@ -291,23 +261,13 @@ final class HreflangListUtility
         return $translations;
     }
 
-    /**
-     * @param string $text
-     * @param string $type
-     * @param array  $additionalData
-     */
-    protected function addMsg(string $text, string $type = 'info', $additionalData = []): void
+    protected function addMsg(string $text, string $type = 'info', array $additionalData = []): void
     {
         $messageText = LocalizationUtility::translate(self::lll . $text, null, $additionalData);
         $message = new Message($type, $messageText ?? $text);
         $this->messages[] = $message;
     }
 
-    /**
-     * @param string $content
-     *
-     * @return string
-     */
     protected function generateHtml(string $content): string
     {
         return "<section class='tx-hreflang-list'>"

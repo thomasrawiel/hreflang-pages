@@ -26,12 +26,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 final class PageUtility
 {
     /**
-     * @param int                $pageId
-     * @param int                $languageId
      *
-     * @param SiteInterface|null $site
-     *
-     * @return mixed
      * @throws \TYPO3\CMS\Core\Exception\SiteNotFoundException
      */
     public static function getPageTranslationRecord(int $pageId, int $languageId, ?SiteInterface $site = null): ?array

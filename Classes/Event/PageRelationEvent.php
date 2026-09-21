@@ -26,17 +26,11 @@ final readonly class PageRelationEvent
     {
     }
 
-    /**
-     * @return int
-     */
     public function getSource(): int
     {
         return $this->source;
     }
 
-    /**
-     * @return array
-     */
     public function getTargets(): array
     {
         return $this->targets;

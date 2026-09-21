@@ -19,14 +19,8 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class RequestUtility
 {
-    /**
-     * @var ServerRequestInterface|null
-     */
-    protected ?ServerRequestInterface $request = null;
+    protected ?ServerRequestInterface $request;
 
-    /**
-     * @var array
-     */
     protected array $arguments = [];
 
     /**
@@ -36,46 +30,31 @@ final class RequestUtility
     {
         $this->request = $this->getRequest();
 
-        if (!empty($this->request)) {
+        if ($this->request instanceof \Psr\Http\Message\ServerRequestInterface) {
             $this->arguments = !empty($this->request->getAttributes()['routing']) ? $this->request->getAttributes()['routing']->getArguments() : [];
         }
     }
 
-    /**
-     * @return string
-     */
     public function getRequestUri(): string
     {
         return $this->request->getUri()->__toString();
     }
 
-    /**
-     * @return bool
-     */
     public function hasArguments(): bool
     {
-        return !empty($this->arguments);
+        return $this->arguments !== [];
     }
 
-    /**
-     * @return array
-     */
     public function getArguments(): array
     {
         return $this->arguments;
     }
 
-    /**
-     * @return string
-     */
     public function getArgumentsAsQueryString(): string
     {
         return http_build_query($this->arguments);
     }
 
-    /**
-     * @return ServerRequestInterface|null
-     */
     protected function getRequest(): ?ServerRequestInterface
     {
         return $GLOBALS['TYPO3_REQUEST'] ?? null;

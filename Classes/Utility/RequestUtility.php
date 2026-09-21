@@ -50,9 +50,6 @@ final class RequestUtility
         return $this->arguments;
     }
 
-    /**
-     * @return string
-     */
     public function getArgumentsAsQueryString(?string $argument = null): string
     {
         if ($argument === null) {

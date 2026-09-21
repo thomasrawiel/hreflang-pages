@@ -50,11 +50,24 @@ final class RequestUtility
         return $this->arguments;
     }
 
-    public function getArgumentsAsQueryString(): string
+    /**
+     * @return string
+     */
+    public function getArgumentsAsQueryString(?string $argument = null): string
     {
-        return http_build_query($this->arguments);
+        if ($argument === null) {
+            return http_build_query($this->arguments);
+        }
+
+        if (array_key_exists($argument, $this->arguments)) {
+            return http_build_query([$argument => $this->arguments[$argument]]);
+        }
+        return '';
     }
 
+    /**
+     * @return ServerRequestInterface|null
+     */
     protected function getRequest(): ?ServerRequestInterface
     {
         return $GLOBALS['TYPO3_REQUEST'] ?? null;

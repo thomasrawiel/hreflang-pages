@@ -142,7 +142,7 @@ final readonly class HreflangPagesGenerator
             return;
         }
 
-        $queryString = $this->requestUtility->getArgumentsAsQueryString();
+        $queryString = $this->requestUtility->getArgumentsAsQueryString('tx_solr');
         foreach ($hrefLangs as $lang => $href) {
             $hrefLangs[$lang] = $href . (parse_url($href, PHP_URL_QUERY) ? '&' : '?') . $queryString;
         }

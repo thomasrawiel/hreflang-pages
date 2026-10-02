@@ -57,7 +57,7 @@ final class RelationUtility
      */
     public function getCachedRelations(int $pageId): array
     {
-        $relations = $this->getCacheInstance()->get($pageId);
+        $relations = $this->getCacheInstance()->get((string)$pageId);
 
         if ($relations === false) {
             $relations = $this->buildRelations($pageId);
